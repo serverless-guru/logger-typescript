@@ -1,5 +1,5 @@
-const crypto = require("crypto");
-const zlib = require("zlib");
+const crypto = require("node:crypto");
+const zlib = require("node:zlib");
 const LOG_EVENT = process.env.LOG_EVENT === "true";
 
 class Logger {
