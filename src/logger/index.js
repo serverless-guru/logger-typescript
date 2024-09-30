@@ -1,6 +1,8 @@
 const crypto = require("node:crypto");
 const zlib = require("node:zlib");
 const LOG_EVENT = process.env.LOG_EVENT === "true";
+const MAX_PAYLOAD_SIZE = 60000;
+const COMPRESS_PAYLOAD_SIZE = 25000;
 
 class Logger {
   static METRIC_UNITS = {
@@ -79,10 +81,10 @@ class Logger {
     const stringifiedPayload = JSON.stringify(payload);
 
     // compress if payload is large
-    if (stringifiedPayload.length > 25000) {
+    if (stringifiedPayload.length > COMPRESS_PAYLOAD_SIZE) {
       processedPayload = zlib.gzipSync(stringifiedPayload).toString("base64");
 
-      if (processedPayload.length > 60000)
+      if (processedPayload.length > MAX_PAYLOAD_SIZE)
         this.warn(
           "Payload too large. Please consider logging a smaller payload."
         );
