@@ -112,16 +112,16 @@ class Logger {
 
     switch (level) {
       case "info":
-        console.info(JSON.stringify(logEntry, null, 2));
+        console.info(logEntry);
         break;
       case "debug":
-        console.debug(JSON.stringify(logEntry, null, 2));
+        console.debug(logEntry);
         break;
       case "warn":
-        console.warn(JSON.stringify(logEntry, null, 2));
+        console.warn(logEntry);
         break;
       case "error":
-        console.error(JSON.stringify(logEntry, null, 2));
+        console.error(logEntry);
         break;
       default:
         break;
@@ -146,7 +146,7 @@ class Logger {
 
   logInputEvent(event) {
     if (LOG_EVENT) {
-      this.info("Input Event", {}, event);
+      this.info("Input Event", event, {});
     }
   }
 
