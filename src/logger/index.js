@@ -44,8 +44,8 @@ class Logger {
   log(
     level,
     message = "",
-    context = {},
     payload = {},
+    context = {},
     sensitiveAttributes = []
   ) {
     // Default sensitive attributes
@@ -131,19 +131,19 @@ class Logger {
   }
 
   info(message = "", payload = {}, context = {}, sensitiveAttributes = []) {
-    this.log("info", message, context, payload, sensitiveAttributes);
+    this.log("info", message, payload, context, sensitiveAttributes);
   }
 
   debug(message = "", payload = {}, context = {}, sensitiveAttributes = []) {
-    this.log("debug", message, context, payload, sensitiveAttributes);
+    this.log("debug", message, payload, context, sensitiveAttributes);
   }
 
   warn(message = "", payload = {}, context = {}, sensitiveAttributes = []) {
-    this.log("warn", message, context, payload, sensitiveAttributes);
+    this.log("warn", message, payload, context, sensitiveAttributes);
   }
 
   error(message = "", payload = {}, context = {}, sensitiveAttributes = []) {
-    this.log("error", message, context, payload, sensitiveAttributes);
+    this.log("error", message, payload, context, sensitiveAttributes);
   }
 
   logInputEvent(event) {
