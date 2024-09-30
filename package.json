@@ -6,6 +6,14 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "devDependencies": {
+    "eslint": "9.11.1",
+    "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-jsdoc": "50.3.0",
+    "eslint-plugin-n": "17.10.3",
+    "eslint-plugin-promise": "7.1.0",
+    "prettier": "3.3.3"
+  },
   "author": "",
   "license": "ISC"
 }
