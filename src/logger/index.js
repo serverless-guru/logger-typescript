@@ -148,6 +148,12 @@ class Logger {
         return this.correlationId;
     }
 
+    setCorrelationId(correlationId) {
+        if (correlationId) {
+            this.correlationId = correlationId;
+        }
+    }
+
     addContextKey(contextObject) {
         if (typeof contextObject === "object" || contextObject !== null) {
             this.persistentContext = {

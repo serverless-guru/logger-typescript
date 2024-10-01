@@ -69,7 +69,8 @@ export class Logger {
         sensitiveAttributes?: Array<string>
     ): void;
     logInputEvent(event: any): void;
-    getCorrelationId(): void;
+    setCorrelationId(correlationId: string): void;
+    getCorrelationId(): string;
     addContextKey(contextObject: Record<string, any>): void;
     metric(activity: string, meta: MetricMeta): void;
     clearLogContext(): void;
