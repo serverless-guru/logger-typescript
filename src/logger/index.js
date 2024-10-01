@@ -1,5 +1,7 @@
 const crypto = require("node:crypto");
 const zlib = require("node:zlib");
+const console = require("node:console");
+
 const LOG_EVENT = process.env.LOG_EVENT === "true";
 const MAX_PAYLOAD_SIZE = 60000;
 const COMPRESS_PAYLOAD_SIZE = 25000;
@@ -39,6 +41,10 @@ class Logger {
         this.correlationId = correlationId ? correlationId : crypto.randomUUID();
         this.applicationName = applicationName;
         this.persistentContext = {};
+        this.console =
+            process.env.AWS_LAMBDA_LOG_FORMAT === "JSON"
+                ? new console.Console((process.stdout, process.stderr))
+                : console;
     }
 
     log(level, message = "", payload = {}, context = {}, sensitiveAttributes = []) {
@@ -94,20 +100,22 @@ class Logger {
         };
 
         // Remove null values for cleanliness
-        Object.keys(logEntry).forEach((key) => logEntry[key] === null && delete logEntry[key]);
+        Object.keys(logEntry).forEach(
+            (key) => (logEntry[key] === null || logEntry[key] === undefined) && delete logEntry[key]
+        );
 
         switch (level) {
             case "info":
-                console.info(logEntry);
+                this.console.info(JSON.stringify(logEntry));
                 break;
             case "debug":
-                console.debug(logEntry);
+                this.console.debug(JSON.stringify(logEntry));
                 break;
             case "warn":
-                console.warn(logEntry);
+                this.console.warn(JSON.stringify(logEntry));
                 break;
             case "error":
-                console.error(logEntry);
+                this.console.error(JSON.stringify(logEntry));
                 break;
             default:
                 break;
@@ -140,6 +148,12 @@ class Logger {
         return this.correlationId;
     }
 
+    setCorrelationId(correlationId) {
+        if (correlationId) {
+            this.correlationId = correlationId;
+        }
+    }
+
     addContextKey(contextObject) {
         if (typeof contextObject === "object" || contextObject !== null) {
             this.persistentContext = {
@@ -163,7 +177,7 @@ class Logger {
         const unit = meta.name === "Duration" ? Logger.METRIC_UNITS.Milliseconds : meta.unit || "Count";
         const dimensions = meta.dimensions || [];
         const emf = {
-            message: `[Embedded Metric] ${activity}`,
+            logMessage: `[Embedded Metric] ${activity}`,
             correlationId: this.correlationId,
             [meta.name]: typeof meta.value === "number" ? meta.value : 1,
             ...dimensions.reduce((acc, curr) => {
@@ -191,7 +205,7 @@ class Logger {
                 ],
             },
         };
-        console.log(JSON.stringify(emf, null, 2));
+        this.console.log(JSON.stringify(emf));
     }
 }
 
