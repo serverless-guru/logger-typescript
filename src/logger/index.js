@@ -105,7 +105,6 @@ class Logger {
         const payloadToPrint = getPayloadToPrint(payload);
 
         const logEntry = {
-            timestamp: new Date().toISOString(), // to be removed
             serviceName: this.serviceName,
             correlationId: this.correlationId,
             logMessage: message,
