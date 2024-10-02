@@ -1,10 +1,11 @@
-const crypto = require("node:crypto");
-const zlib = require("node:zlib");
-const console = require("node:console");
+const randomUUID = require("node:crypto").randomUUID;
+const gzipSync = require("node:zlib").gzipSync;
+const Console = require("node:console").Console;
 
 const LOG_EVENT = process.env.LOG_EVENT === "true";
 const MAX_PAYLOAD_SIZE = 60000;
 const COMPRESS_PAYLOAD_SIZE = 25000;
+const MAX_PAYLOAD_MESSAGE = "Log too large";
 
 class Logger {
     static METRIC_UNITS = {
@@ -38,13 +39,11 @@ class Logger {
 
     constructor(serviceName, applicationName, correlationId = null) {
         this.serviceName = serviceName;
-        this.correlationId = correlationId ? correlationId : crypto.randomUUID();
+        this.correlationId = correlationId ? correlationId : randomUUID();
         this.applicationName = applicationName;
         this.persistentContext = {};
         this.console =
-            process.env.AWS_LAMBDA_LOG_FORMAT === "JSON"
-                ? new console.Console((process.stdout, process.stderr))
-                : console;
+            process.env.AWS_LAMBDA_LOG_FORMAT === "JSON" ? new Console((process.stdout, process.stderr)) : console;
     }
 
     log(level, message = "", payload = {}, context = {}, sensitiveAttributes = []) {
@@ -56,66 +55,80 @@ class Logger {
             "secret",
             "key",
             "x-api-key",
-            "Bearer",
-            "Authorization",
+            "bearer",
+            "authorization",
         ];
 
-        // Merge default sensitive attributes with custom ones
-        const attributesToMask = new Set([...defaultSensitiveAttributes, ...sensitiveAttributes]);
-
-        // Mask sensitive attributes
-        const maskSensitiveAttributes = (obj, attributes) => {
-            for (const key in obj) {
-                if (attributes.has(key)) {
-                    obj[key] = "****";
-                } else if (typeof obj[key] === "object" && obj[key] !== null) {
-                    maskSensitiveAttributes(obj[key], attributes);
-                }
+        const arrayToLowerCase = (array) => {
+            if (Array.isArray(array)) {
+                return array
+                    .map((el) => {
+                        if (typeof el === "string") {
+                            return el.toLowerCase();
+                        }
+                        return undefined;
+                    })
+                    .filter((el) => el);
             }
+            return [];
         };
-        let processedPayload = payload;
-        maskSensitiveAttributes(processedPayload, attributesToMask);
-        const stringifiedPayload = JSON.stringify(payload);
 
-        // compress if payload is large
-        if (stringifiedPayload.length > COMPRESS_PAYLOAD_SIZE) {
-            processedPayload = zlib.gzipSync(stringifiedPayload).toString("base64");
+        // Merge default sensitive attributes with custom ones
+        const attributesToMask = new Set([...defaultSensitiveAttributes, ...arrayToLowerCase(sensitiveAttributes)]);
 
-            if (processedPayload.length > MAX_PAYLOAD_SIZE)
-                this.warn("Payload too large. Please consider logging a smaller payload.");
-        }
+        // Mask sensitive attributes, remove null
+        const maskSensitiveAttributes = (key, value) => {
+            if (attributesToMask.has(key.toLowerCase())) {
+                return "****";
+            }
+            if (value === null) {
+                return undefined;
+            }
+            return value;
+        };
+
+        const getPayloadToPrint = (payload) => {
+            if (level === "warn" && message === MAX_PAYLOAD_MESSAGE) {
+                return {gzip: false, payload};
+            }
+            const stringifiedPayload = JSON.stringify(payload, maskSensitiveAttributes);
+            if (stringifiedPayload.length > MAX_PAYLOAD_SIZE) {
+                this.warn(MAX_PAYLOAD_MESSAGE, {size: stringifiedPayload.length, MAX_PAYLOAD_SIZE});
+                return {gzip: false, payload: undefined};
+            }
+            if (stringifiedPayload.length > COMPRESS_PAYLOAD_SIZE) {
+                return {gzip: true, payload: gzipSync(stringifiedPayload).toString("base64")};
+            }
+            return {gzip: false, payload};
+        };
+
+        const payloadToPrint = getPayloadToPrint(payload);
+
         const logEntry = {
-            timestamp: new Date().toISOString(), // to be removed
             serviceName: this.serviceName,
             correlationId: this.correlationId,
             logMessage: message,
             context: {
                 ...this.persistentContext,
-                ...(typeof context === "object" && Object.keys(context).length ? context : {}),
+                ...(typeof context === "object" && context !== null && Object.keys(context).length ? context : {}),
+                gzip: payloadToPrint.gzip === true ? true : undefined,
             },
-            payload:
-                typeof payload === "object" && (Object.keys(processedPayload).length || processedPayload.length > 0)
-                    ? processedPayload
-                    : null,
+            payload: payloadToPrint.payload,
         };
 
-        // Remove null values for cleanliness
-        Object.keys(logEntry).forEach(
-            (key) => (logEntry[key] === null || logEntry[key] === undefined) && delete logEntry[key]
-        );
-
+        const stringifiedLogEntry = JSON.stringify(logEntry, maskSensitiveAttributes);
         switch (level) {
             case "info":
-                this.console.info(JSON.stringify(logEntry));
+                this.console.info(stringifiedLogEntry);
                 break;
             case "debug":
-                this.console.debug(JSON.stringify(logEntry));
+                this.console.debug(stringifiedLogEntry);
                 break;
             case "warn":
-                this.console.warn(JSON.stringify(logEntry));
+                this.console.warn(stringifiedLogEntry);
                 break;
             case "error":
-                this.console.error(JSON.stringify(logEntry));
+                this.console.error(stringifiedLogEntry);
                 break;
             default:
                 break;
@@ -155,7 +168,7 @@ class Logger {
     }
 
     addContextKey(contextObject) {
-        if (typeof contextObject === "object" || contextObject !== null) {
+        if (typeof contextObject === "object" && contextObject !== null) {
             this.persistentContext = {
                 ...this.persistentContext,
                 ...contextObject,
