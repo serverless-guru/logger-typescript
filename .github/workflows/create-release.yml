@@ -1,0 +1,89 @@
+name: Create Release
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    version-check:
+        name: Version Check
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Check version changes
+              uses: EndBug/version-check@v2
+              id: check
+              with:
+                  diff-search: true
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Version update detected
+              if: steps.check.outputs.changed == 'true'
+              run: 'echo "Version change found! New version: ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})"'
+            - name: Version not updated
+              if: steps.check.outputs.changed == 'false'
+              run: 'echo "No version change found!"'
+        outputs:
+            version: ${{ steps.check.outputs.version }}
+            changed: ${{ steps.check.outputs.changed }}
+
+    release:
+        name: Create Release
+        needs: version-check
+        if: needs.version-check.outputs.changed == 'true'
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: "Determine Tag"
+              run: 'echo "RELEASE_TAG=${{ needs.version-check.outputs.version }}" >> $GITHUB_ENV'
+            - name: Create Release
+              id: create_release
+              uses: actions/github-script@v7
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  script: |
+                      try {
+                        const response = await github.rest.repos.createRelease({
+                          draft: false,
+                          generate_release_notes: true,
+                          name: process.env.RELEASE_TAG,
+                          owner: context.repo.owner,
+                          prerelease: false,
+                          repo: context.repo.repo,
+                          tag_name: process.env.RELEASE_TAG,
+                        });
+
+                        core.exportVariable('RELEASE_ID', response.data.id);
+                        core.exportVariable('RELEASE_UPLOAD_URL', response.data.upload_url);
+                      } catch (error) {
+                        core.setFailed(error.message);
+                      }
+    build:
+        runs-on: ubuntu-latest
+        needs: version-check
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+            - run: npm ci
+            - run: npm test
+
+    publish-gpr:
+        needs: build
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  registry-url: https://npm.pkg.github.com/
+            - run: npm ci
+            - run: npm publish
+              env:
+                  NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
