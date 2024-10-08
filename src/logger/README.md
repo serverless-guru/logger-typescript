@@ -1,6 +1,6 @@
 # Logger
 
-Logger is an opinionated logger utility for AWS Lambda, aimed at simplifying log analysis with [CloudWatchLogs Insight](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html).
+Logger is an opinionated logger utility for Javascript with a focus on AWS Lambda. Its aim is to simplify log analysis with [CloudWatchLogs Insight](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html).
 
 Key features:
 * Small footprint
@@ -8,7 +8,7 @@ Key features:
 * Automatically masks sensible values
 * Automatically compresses large payloads (>25Kb)
 * Automatically ignores very large payloads (>60Kb)
-* Supports CloudwatchLogs text format and CloudwatchLogs JSON format
+* Supports CloudwatchLogs text and JSON format
 
 ## Log schema
 ```json
@@ -133,7 +133,7 @@ Let's consider the case of a Lambda behind an API Gateway. This function sends a
 * The first Lambda uses the `setCorrelationId` method to assign the `correlationId` from the payload to all log outputs
 * The `correlationId` is part of the payload sent to SQS
 * The second Lambda uses the `setCorrelationId` method to assign the `correlationId` from the SQS event to all log outputs
-* The `correlationId` is added to the invocation payload pf the remote API.
+* The `correlationId` is added to the invocation payload of the remote API.
 
 Using CloudWatchLogs insight, it is now possible to query simultaneously both Lambda LogGroups, API Gateway LogGroup with a single simple query:
 ```
