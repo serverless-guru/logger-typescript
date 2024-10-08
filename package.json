@@ -1,50 +1,59 @@
 {
-  "name": "logger",
-  "version": "1.0.0",
-  "description": "Common logger utility",
-  "main": "index.js",
-  "scripts": {
-    "build": "rm -fr lib/ && rm -rf .tsbuildinfo/ && npm run build:cjs && npm run build:esm",
-    "build:cjs": "tsc --build tsconfig.cjs.json && echo '{ \"type\": \"commonjs\" }' > lib/cjs/package.json",
-    "build:esm": "tsc --build tsconfig.json && echo '{ \"type\": \"module\" }' > lib/esm/package.json",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "exports": {
-    ".": {
-      "require": {
-        "types":"./lib/cjs/index.d.ts",
-        "default":"./lib/cjs/index.js"
-      },
-      "import": {
-        "types":"./lib/esm/index.d.ts",
-        "default":"./lib/esm/index.js"
-      }
+    "name": "@serverless-guru/logger",
+    "version": "1.0.0",
+    "description": "Common logger utility",
+    "main": "./lib/cjs/index.js",
+    "types": "./lib/cjs/index.d.ts",
+    "scripts": {
+        "prepare": "npm run build",
+        "build": "rm -fr lib/ && rm -rf .tsbuildinfo/ && npm run build:cjs && npm run build:esm",
+        "build:cjs": "tsc --build tsconfig.cjs.json && echo '{ \"type\": \"commonjs\" }' > lib/cjs/package.json",
+        "build:esm": "tsc --build tsconfig.json && echo '{ \"type\": \"module\" }' > lib/esm/package.json",
+        "test": "echo \"no test specified\" && exit 0"
     },
-    "./logger": {
-      "import": "./lib/esm/logger/index.js",
-      "require": "./lib/cjs/logger/index.js"
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/serverless-guru/logger.git"
     },
-    "./types": {
-      "import": "./lib/esm/types/index.js",
-      "require": "./lib/cjs/types/index.js"
+    "files": [
+        "lib"
+    ],
+    "exports": {
+        ".": {
+            "require": {
+                "types": "./lib/cjs/index.d.ts",
+                "default": "./lib/cjs/index.js"
+            },
+            "import": {
+                "types": "./lib/esm/index.d.ts",
+                "default": "./lib/esm/index.js"
+            }
+        },
+        "./logger": {
+            "import": "./lib/esm/logger/index.js",
+            "require": "./lib/cjs/logger/index.js"
+        },
+        "./types": {
+            "import": "./lib/esm/types/index.js",
+            "require": "./lib/cjs/types/index.js"
+        }
+    },
+    "devDependencies": {
+        "@tsconfig/node20": "20.1.4",
+        "@types/node": "22.7.4",
+        "@typescript-eslint/eslint-plugin": "8.8.0",
+        "@typescript-eslint/parser": "8.8.0",
+        "eslint": "9.11.1",
+        "eslint-config-prettier": "9.1.0",
+        "eslint-plugin-jsdoc": "50.3.0",
+        "eslint-plugin-n": "17.10.3",
+        "eslint-plugin-promise": "7.1.0",
+        "prettier": "3.3.3",
+        "typescript": "5.6.2"
+    },
+    "author": "Serverless Guru",
+    "license": "ISC",
+    "engines": {
+        "node": ">=18"
     }
-},
-  "devDependencies": {
-    "@tsconfig/node20": "20.1.4",
-    "@types/node": "22.7.4",
-    "@typescript-eslint/eslint-plugin": "8.8.0",
-    "@typescript-eslint/parser": "8.8.0",
-    "eslint": "9.11.1",
-    "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-jsdoc": "50.3.0",
-    "eslint-plugin-n": "17.10.3",
-    "eslint-plugin-promise": "7.1.0",
-    "prettier": "3.3.3",
-    "typescript": "5.6.2"
-  },
-  "author": "",
-  "license": "ISC",
-  "engines": {
-    "node": ">=18"
-  }
 }
