@@ -2,13 +2,21 @@
 
 Logger is an opinionated logger utility for Javascript with a focus on AWS Lambda. Its aim is to simplify log analysis with [CloudWatchLogs Insight](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html).
 
-Key features:
+## Key features
 * Small footprint
 * Enforces structured and consistent logs across all your Lambda functions
 * Automatically masks sensible values
 * Automatically compresses large payloads (>25Kb)
 * Automatically ignores very large payloads (>60Kb)
 * Supports CloudwatchLogs text and JSON format
+
+### Environment variables
+* SG_LOGGER_LOG_EVENT: Log event, _default: true_
+* SG_LOGGER_SKIP_MASK: Skip masking of sensible values, _default: false_
+* SG_LOGGER_MAX_SIZE: Skip logging payload bigger than size (in bytes), _default: 60000_
+* SG_LOGGER_NO_SKIP: Don't skip payloads bigger than *SG_LOGGER_MAX_SIZE*, _default: false_
+* SG_LOGGER_COMPRESS_SIZE: Compress (gzip) payload bigger than size (in bytes), _default: 25000_
+* SG_LOGGER_NO_COMPRESS: Don't compress logs bigger than *SG_LOGGER_COMPRESS_SIZE*, _default: false_
 
 ## Log schema
 ```json
