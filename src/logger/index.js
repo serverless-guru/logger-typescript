@@ -2,10 +2,12 @@ const randomUUID = require("node:crypto").randomUUID;
 const gzipSync = require("node:zlib").gzipSync;
 const Console = require("node:console").Console;
 
-const LOG_EVENT = process.env.LOG_EVENT?.toLowerCase() === "true";
-const LOG_SKIP_MASK = process.env.LOG_MASK?.toLowerCase() === "false";
-const MAX_PAYLOAD_SIZE = 60000;
-const COMPRESS_PAYLOAD_SIZE = 25000;
+const LOG_EVENT = process.env.SG_LOGGER_LOG_EVENT?.toLowerCase() === "true";
+const SKIP_MASK = process.env.SG_LOGGER_MASK?.toLowerCase() === "false";
+const MAX_SIZE = parseInt(process.env.SG_LOGGER_MAX_SIZE || "60000") || 60000;
+const COMPRESS_SIZE = parseInt(process.env.SG_LOGGER_COMPRESS_SIZE || "25000") || 25000;
+const NO_COMPRESS = process.env.SG_LOGGER_NO_COMPRESS?.toLowerCase == "true";
+const NO_SKIP = process.env.SG_LOGGER_NO_SKIP?.toLowerCase == "true";
 const MAX_PAYLOAD_MESSAGE = "Log too large";
 
 class Logger {
@@ -82,7 +84,7 @@ class Logger {
             if (value === null) {
                 return undefined;
             }
-            if (LOG_SKIP_MASK === true) {
+            if (SKIP_MASK) {
                 return value;
             }
             if (attributesToMask.has(key.toLowerCase())) {
@@ -96,11 +98,11 @@ class Logger {
                 return {gzip: false, payload};
             }
             const stringifiedPayload = JSON.stringify(payload, maskSensitiveAttributes);
-            if (stringifiedPayload.length > MAX_PAYLOAD_SIZE) {
-                this.warn(MAX_PAYLOAD_MESSAGE, {size: stringifiedPayload.length, MAX_PAYLOAD_SIZE});
+            if (stringifiedPayload.length > MAX_SIZE && !NO_SKIP) {
+                this.warn(MAX_PAYLOAD_MESSAGE, {size: stringifiedPayload.length, MAX_SIZE: MAX_SIZE});
                 return {gzip: false, payload: undefined};
             }
-            if (stringifiedPayload.length > COMPRESS_PAYLOAD_SIZE) {
+            if (stringifiedPayload.length > COMPRESS_SIZE && !NO_COMPRESS) {
                 return {gzip: true, payload: gzipSync(stringifiedPayload).toString("base64")};
             }
             return {gzip: false, payload};
