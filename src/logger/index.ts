@@ -5,7 +5,8 @@ import { MetricUnitList, MAX_PAYLOAD_SIZE, COMPRESS_PAYLOAD_SIZE, MAX_PAYLOAD_ME
 
 import type { Level, StringArray, EmfOutput, PayloadToPrintResponse, MetricMeta, LogEntry, JSONObject } from "../types";
 
-const LOG_EVENT = process.env.LOG_EVENT === "true";
+const LOG_EVENT = process.env.LOG_EVENT?.toLowerCase() === "true";
+const LOG_SKIP_MASK = process.env.LOG_MASK?.toLowerCase() === "false";
 
 class Logger {
     static METRIC_UNITS = MetricUnitList;
@@ -63,11 +64,14 @@ class Logger {
 
         // Mask sensitive attributes, remove null
         const maskSensitiveAttributes = (key: string, value: JSONObject): JSONObject | string | undefined => {
-            if (attributesToMask.has(key.toLowerCase())) {
-                return "****";
-            }
             if (value === null) {
                 return undefined;
+            }
+            if (LOG_SKIP_MASK === true) {
+                return value;
+            }
+            if (attributesToMask.has(key.toLowerCase())) {
+                return "****";
             }
             return value;
         };
