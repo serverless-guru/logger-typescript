@@ -196,7 +196,7 @@ class Logger {
         if (!meta.name) {
             return;
         }
-        const unit = meta.name === "Duration" ? MetricUnitList.Milliseconds : meta.unit || "Count";
+        const unit = meta.name === "Duration" ? MetricUnitList.Milliseconds : meta.unit || MetricUnitList.Count;
         const dimensions = meta.dimensions || [];
         const emf: EmfOutput = {
             logMessage: `[Embedded Metric] ${activity}`,
