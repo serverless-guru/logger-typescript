@@ -35,25 +35,7 @@ Key features:
 npm i --save https://github.com/serverless-guru/logger
 ```
 
-## Basic usage
-For simple applications, when the code is self contained in a single Handler file.
-
-```javascript
-const handler = async (event, context) => {
-  const { Logger } = require("logger");
-  const logger = new Logger("myService", "myFirstApplication");
-
-  logger.info('Event', {event, context})
-}
-
-module.exports = {
-  handler
-}
-```
-
-## Advanced Usage
-For more realistic usage, when multiple files are required across the project.
-
+## Usage
 The `Logger` instance can be re-used across modules, allowing to keep globally defined context keys.
 
 **helpers/logger.js**
