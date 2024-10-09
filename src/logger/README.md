@@ -213,6 +213,8 @@ Any key, be it in the `payload` or the `context`, having one of this values will
 * x-api-key
 * bearer
 * authorization
+
+Masking can be disabled, by setting the environment variable `LOG_MASK="false"`.
 ### metric
 This generates a log output in [EMF](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html) format, creating a metric in [Cloudwatch Metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/working_with_metrics.html).
 The metrics will be available under the namespace defined by `this.applicationName`.

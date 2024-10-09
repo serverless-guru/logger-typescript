@@ -2,7 +2,8 @@ const randomUUID = require("node:crypto").randomUUID;
 const gzipSync = require("node:zlib").gzipSync;
 const Console = require("node:console").Console;
 
-const LOG_EVENT = process.env.LOG_EVENT === "true";
+const LOG_EVENT = process.env.LOG_EVENT?.toLowerCase() === "true";
+const LOG_SKIP_MASK = process.env.LOG_MASK?.toLowerCase() === "false";
 const MAX_PAYLOAD_SIZE = 60000;
 const COMPRESS_PAYLOAD_SIZE = 25000;
 const MAX_PAYLOAD_MESSAGE = "Log too large";
@@ -78,11 +79,14 @@ class Logger {
 
         // Mask sensitive attributes, remove null
         const maskSensitiveAttributes = (key, value) => {
-            if (attributesToMask.has(key.toLowerCase())) {
-                return "****";
-            }
             if (value === null) {
                 return undefined;
+            }
+            if (LOG_SKIP_MASK === true) {
+                return value;
+            }
+            if (attributesToMask.has(key.toLowerCase())) {
+                return "****";
             }
             return value;
         };
