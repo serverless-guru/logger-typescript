@@ -38,6 +38,61 @@ Logger is an opinionated logger utility for Javascript with a focus on AWS Lambd
   }
 }
 ```
+
+### Error schema
+#### Without an Error object
+`logger.error('global error', {key1: 'value1'})`
+
+```json
+{
+    "service": "myService",
+    "level": "ERROR",
+    "correlationId": "3bfd61c4-8934-4ae9-b646-d57144094986",
+    "message": "invalid factor",
+    "context": {
+      "handlerNamespace": "multiply",
+      "factor": 2
+    },
+    "payload": {
+      "key1": "value1"
+    }
+}
+```
+
+#### With an Error object
+```javascript
+logger.error('global error', new RangeError('invalid factor', {
+  cause: {
+    factor: event.factor,
+    limit: 10,
+    reason: 'too big'
+  }
+}))
+```
+
+```json
+{
+    "service": "myService",
+    "level": "ERROR",
+    "correlationId": "3bfd61c4-8934-4ae9-b646-d57144094986",
+    "message": "global error",
+    "context": {
+      "handlerNamespace": "multiply",
+      "factor": 2
+    },
+    "error": {
+        "name": "RangeError",
+        "location": "/path/to/file.js:341",
+        "message": "invalid factor",
+        "stack": "RangeError: invalid factor\n    at main (/path/to/file.js:341:15)\n    at /path/to/file2.js:953:30\n    at new Promise (<anonymous>)\n    at AwsInvokeLocal.invokeLocalNodeJs (/path/to/file3.js:906:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
+        "cause": {
+            "factor": 12,
+            "limit": 10,
+            "reason": "too big"
+        }
+    }
+}
+```
 ## Installation
 
 ```bash
@@ -90,6 +145,11 @@ const main = async (event, context) => {
 
     if (event.factor) {
       logger.addContextKey({ factor: event.factor })
+      if (event.factor > 10) {
+        const cause = { factor: event.factor, limit: 10, reason: 'too big' }
+        logger.error('invalid factor', cause)
+        throw new RangeError('invalid factor', { cause })
+      }
     }
 
     const start = new Date().getTime()
@@ -106,6 +166,8 @@ const main = async (event, context) => {
       value: end - start,
       dimensions: [['LOG_FORMAT', LOG_FORMAT]],
     })
+  } catch(error) {
+    logger.error('global error', error)
   } finally {
     logger.clearLogContext()
   }

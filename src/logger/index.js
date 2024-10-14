@@ -84,6 +84,9 @@ class Logger {
             if (value === null) {
                 return undefined;
             }
+            if (typeof value === "object" && isEmptyObject(value)) {
+                return undefined;
+            }
             if (SKIP_MASK) {
                 return value;
             }
@@ -93,7 +96,34 @@ class Logger {
             return value;
         };
 
+        const isEmptyObject = (value) => {
+            if (value == null) {
+                return false;
+            }
+            if (typeof value !== "object") {
+                return false;
+            }
+            const proto = Object.getPrototypeOf(value);
+            if (proto !== null && proto !== Object.prototype) {
+                return false;
+            }
+            return isEmpty(value);
+        };
+
+        const isEmpty = (obj) => {
+            for (const prop in obj) {
+                if (Object.hasOwn(obj, prop)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
         const getPayloadToPrint = (payload) => {
+            if (payload instanceof Error) {
+                return {gzip: false, error: formatError(payload)};
+            }
+
             if (level === "warn" && message === MAX_PAYLOAD_MESSAGE) {
                 return {gzip: false, payload};
             }
@@ -106,6 +136,35 @@ class Logger {
                 return {gzip: true, payload: gzipSync(stringifiedPayload).toString("base64")};
             }
             return {gzip: false, payload};
+        };
+
+        const formatError = (error) => {
+            return {
+                name: error.name,
+                location: getCodeLocation(error.stack),
+                message: error.message,
+                stack: error.stack,
+                cause: error.cause instanceof Error ? formatError(error.cause) : error.cause,
+            };
+        };
+
+        const getCodeLocation = (stack) => {
+            if (!stack) {
+                return "";
+            }
+
+            const stackLines = stack.split("\n");
+            const regex = /\(([^)]*?):(\d+?):(\d+?)\)\\?$/;
+
+            for (const item of stackLines) {
+                const match = regex.exec(item);
+
+                if (Array.isArray(match)) {
+                    return `${match[1]}:${Number(match[2])}`;
+                }
+            }
+
+            return "";
         };
 
         const payloadToPrint = getPayloadToPrint(payload);
@@ -121,6 +180,7 @@ class Logger {
                 gzip: payloadToPrint.gzip === true ? true : undefined,
             },
             payload: payloadToPrint.payload,
+            error: payloadToPrint.error,
         };
 
         const stringifiedLogEntry = JSON.stringify(logEntry, maskSensitiveAttributes);
