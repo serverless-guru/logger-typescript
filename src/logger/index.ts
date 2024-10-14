@@ -43,7 +43,7 @@ class Logger {
     log(
         level: Level,
         message: string = "",
-        payload: JSONObject = {},
+        payload: JSONObject | Error = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
     ) {
@@ -116,7 +116,7 @@ class Logger {
             return true;
         };
 
-        const getPayloadToPrint = (payload: JSONObject): PayloadToPrintResponse => {
+        const getPayloadToPrint = (payload: JSONObject | Error): PayloadToPrintResponse => {
             if (payload instanceof Error) {
                 return { gzip: false, error: formatError(payload) };
             }
@@ -226,7 +226,7 @@ class Logger {
 
     error(
         message: string = "",
-        payload: JSONObject = {},
+        payload: JSONObject | Error = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
     ) {
