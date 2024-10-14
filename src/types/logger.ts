@@ -24,16 +24,20 @@ interface JSONObject {
 }
 interface PayloadToPrintResponse {
     gzip?: boolean;
-    payload: JSONObject | string | undefined;
+    payload?: JSONObject | string | undefined;
+    error?: ErrorLogAttributes;
 }
 
 interface LogEntry {
-    serviceName: string;
+    service: string;
     correlationId: string;
-    logMessage: string;
+    message: string;
     context: JSONObject;
-    payload: JSONObject | string | undefined;
+    payload?: JSONObject | string | undefined;
+    error?: ErrorLogAttributes;
 }
+
+type ErrorLogAttributes = { [key: string]: unknown };
 
 type EmfOutput = Readonly<{
     [key: string]: string | number | object;
@@ -60,4 +64,5 @@ export type {
     LogEntry,
     MetricDefinition,
     JSONObject,
+    ErrorLogAttributes,
 };

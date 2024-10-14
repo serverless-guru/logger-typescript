@@ -7,4 +7,5 @@ export type {
     LogEntry,
     MetricDefinition,
     JSONObject,
+    ErrorLogAttributes,
 } from "./logger";
