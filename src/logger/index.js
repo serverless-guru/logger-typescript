@@ -112,6 +112,7 @@ class Logger {
 
         const logEntry = {
             service: this.serviceName,
+            level: level.toUpperCase(),
             correlationId: this.correlationId,
             message,
             context: {

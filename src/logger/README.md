@@ -22,6 +22,7 @@ Logger is an opinionated logger utility for Javascript with a focus on AWS Lambd
 ```json
 {
   "service": "myService",
+  "level": "INFO",
   "correlationId": "092f5cf0-d1c8-4a71-a8a0-3c86aeb1c212",
   "message": "my message",
   "context": {
