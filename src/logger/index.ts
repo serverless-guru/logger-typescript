@@ -3,7 +3,16 @@ import { gzipSync } from "node:zlib";
 import { Console } from "node:console";
 import { MetricUnitList, MAX_PAYLOAD_SIZE, COMPRESS_PAYLOAD_SIZE, MAX_PAYLOAD_MESSAGE } from "../constants";
 
-import type { Level, StringArray, EmfOutput, PayloadToPrintResponse, MetricMeta, LogEntry, JSONObject } from "../types";
+import type {
+    Level,
+    StringArray,
+    EmfOutput,
+    PayloadToPrintResponse,
+    MetricMeta,
+    LogEntry,
+    JSONObject,
+    ErrorLogAttributes,
+} from "../types";
 
 const LOG_EVENT = process.env.SG_LOGGER_LOG_EVENT?.toLowerCase() === "true";
 const SKIP_MASK = process.env.SG_LOGGER_MASK?.toLowerCase() === "false";
@@ -72,6 +81,9 @@ class Logger {
             if (value === null) {
                 return undefined;
             }
+            if (typeof value === "object" && isEmptyObject(value)) {
+                return undefined;
+            }
             if (SKIP_MASK === true) {
                 return value;
             }
@@ -81,7 +93,33 @@ class Logger {
             return value;
         };
 
+        const isEmptyObject = (value: JSONObject): boolean => {
+            if (value == null) {
+                return false;
+            }
+            if (typeof value !== "object") {
+                return false;
+            }
+            const proto = Object.getPrototypeOf(value);
+            if (proto !== null && proto !== Object.prototype) {
+                return false;
+            }
+            return isEmpty(value);
+        };
+
+        const isEmpty = (obj: JSONObject): boolean => {
+            for (const prop in obj) {
+                if (Object.hasOwn(obj, prop)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
         const getPayloadToPrint = (payload: JSONObject): PayloadToPrintResponse => {
+            if (payload instanceof Error) {
+                return { gzip: false, error: formatError(payload) };
+            }
             if (level === "warn" && message === MAX_PAYLOAD_MESSAGE) {
                 return { gzip: false, payload };
             }
@@ -96,18 +134,48 @@ class Logger {
             return { gzip: false, payload };
         };
 
+        const formatError = (error: Error): ErrorLogAttributes => {
+            return {
+                name: error.name,
+                location: getCodeLocation(error.stack),
+                message: error.message,
+                stack: error.stack,
+                cause: error.cause instanceof Error ? formatError(error.cause) : error.cause,
+            };
+        };
+
+        const getCodeLocation = (stack?: string) => {
+            if (!stack) {
+                return "";
+            }
+
+            const stackLines = stack.split("\n");
+            const regex = /\(([^)]*?):(\d+?):(\d+?)\)\\?$/;
+
+            for (const item of stackLines) {
+                const match = regex.exec(item);
+
+                if (Array.isArray(match)) {
+                    return `${match[1]}:${Number(match[2])}`;
+                }
+            }
+
+            return "";
+        };
+
         const payloadToPrint = getPayloadToPrint(payload);
 
         const logEntry: LogEntry = {
-            serviceName: this.serviceName,
+            service: this.serviceName,
             correlationId: this.correlationId,
-            logMessage: message,
+            message,
             context: {
                 ...this.persistentContext,
                 ...(typeof context === "object" && context !== null && Object.keys(context).length ? context : {}),
                 gzip: payloadToPrint.gzip === true ? true : undefined,
             },
             payload: payloadToPrint.payload,
+            error: payloadToPrint.error,
         };
 
         const stringifiedLogEntry = JSON.stringify(logEntry, maskSensitiveAttributes);
@@ -204,7 +272,8 @@ class Logger {
         const unit = meta.name === "Duration" ? MetricUnitList.Milliseconds : meta.unit || MetricUnitList.Count;
         const dimensions = meta.dimensions || [];
         const emf: EmfOutput = {
-            logMessage: `[Embedded Metric] ${activity}`,
+            message: `[Embedded Metric] ${activity}`,
+            service: this.serviceName,
             correlationId: this.correlationId,
             [meta.name]: typeof meta.value === "number" ? meta.value : 1,
             ...dimensions.reduce((acc: Record<string, string>, curr) => {
