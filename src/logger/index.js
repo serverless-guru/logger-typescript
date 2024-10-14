@@ -111,9 +111,9 @@ class Logger {
         const payloadToPrint = getPayloadToPrint(payload);
 
         const logEntry = {
-            serviceName: this.serviceName,
+            service: this.serviceName,
             correlationId: this.correlationId,
-            logMessage: message,
+            message,
             context: {
                 ...this.persistentContext,
                 ...(typeof context === "object" && context !== null && Object.keys(context).length ? context : {}),
@@ -196,7 +196,8 @@ class Logger {
         const unit = meta.name === "Duration" ? Logger.METRIC_UNITS.Milliseconds : meta.unit || "Count";
         const dimensions = meta.dimensions || [];
         const emf = {
-            logMessage: `[Embedded Metric] ${activity}`,
+            service: this.serviceName,
+            message: `[Embedded Metric] ${activity}`,
             correlationId: this.correlationId,
             [meta.name]: typeof meta.value === "number" ? meta.value : 1,
             ...dimensions.reduce((acc, curr) => {
