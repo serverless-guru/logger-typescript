@@ -21,9 +21,9 @@ Logger is an opinionated logger utility for Javascript with a focus on AWS Lambd
 ## Log schema
 ```json
 {
-  "serviceName": "myService",
+  "service": "myService",
   "correlationId": "092f5cf0-d1c8-4a71-a8a0-3c86aeb1c212",
-  "logMessage": "my message",
+  "message": "my message",
   "context": {
     "handlerNamespace": "multiply",
     "factor": 2
@@ -156,7 +156,7 @@ const correlationId = logger.getCorrelationId()
 ### logInputEvent
 Logs the object passed as argument when the environment variable _LOG\_EVENT_ is set to _"true"_. Generally used to conditionally log the incoming event, but it can be used for any other payload too.
 
-The _logMessage_ key will always be `Input Event`.
+The _message_ key will always be `Input Event`.
 ```javascript
 logger.logInputEvent(payload)
 ```
@@ -184,7 +184,7 @@ Prints a log message.
 logger.log(level, message, payload, context, sensitiveAttributes)
 ```
 * __level__ [string, mandatory]: one of `info`, `debug`, `warn`, `error`
-* __message__ [string, mandatory]: Assigned to the output `logMessage`. It is good practice to keep it concise and describe the activity. Re-use the same message across multiple logs, identify the individual activities using context or payload values.
+* __message__ [string, mandatory]: Assigned to the output `message`. It is good practice to keep it concise and describe the activity. Re-use the same message across multiple logs, identify the individual activities using context or payload values.
 * __payload__ [string, object]: The payload to log
 * __context__ [object]: Keys to add to the context of this log output
 * __sensitiveAttributes__ [array of string]: Additional attributes to mask in this log output
