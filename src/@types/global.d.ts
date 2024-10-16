@@ -6,5 +6,6 @@ declare namespace NodeJS {
         SG_LOGGER_COMPRESS_SIZE?: string;
         SG_LOGGER_NO_COMPRESS?: string;
         SG_LOGGER_NO_SKIP?: string;
+        SG_LOGGER_LOG_TS?: string;
     }
 }
