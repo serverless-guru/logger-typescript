@@ -100,7 +100,7 @@ logger.error('global error', new RangeError('invalid factor', {
 ## Installation
 
 ```bash
-npm i --save https://github.com/serverless-guru/logger
+npm i --save @serverless-guru/logger
 ```
 
 ## Usage
