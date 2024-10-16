@@ -21,6 +21,7 @@ const COMPRESS_SIZE =
     parseInt(process.env.SG_LOGGER_COMPRESS_SIZE || `${COMPRESS_PAYLOAD_SIZE}`) || COMPRESS_PAYLOAD_SIZE;
 const NO_COMPRESS = process.env.SG_LOGGER_NO_COMPRESS?.toLowerCase() === "true";
 const NO_SKIP = process.env.SG_LOGGER_NO_SKIP?.toLowerCase() === "true";
+const LOG_TS = process.env.SG_LOGGER_LOG_TS?.toLowerCase() === "true";
 
 class Logger {
     static METRIC_UNITS = MetricUnitList;
@@ -163,9 +164,17 @@ class Logger {
             return "";
         };
 
+        const getTimestamp = (): number | undefined => {
+            if (LOG_TS) {
+                return new Date().getTime();
+            }
+            return undefined;
+        };
+
         const payloadToPrint = getPayloadToPrint(payload);
 
         const logEntry: LogEntry = {
+            timestamp: getTimestamp(),
             service: this.serviceName,
             correlationId: this.correlationId,
             message,

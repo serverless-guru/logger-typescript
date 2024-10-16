@@ -29,6 +29,7 @@ interface PayloadToPrintResponse {
 }
 
 interface LogEntry {
+    timestamp?: number;
     service: string;
     correlationId: string;
     message: string;
