@@ -12,9 +12,10 @@
         "test": "echo \"no test specified\" && exit 0"
     },
     "repository": {
-      "type": "git",
-      "url": "git+https://github.com/serverless-guru/logger.git"
+        "type": "git",
+        "url": "https://github.com/serverless-guru/logger"
     },
+    "homepage": "https://github.com/serverless-guru/logger#readme",
     "files": [
         "lib"
     ],
@@ -55,5 +56,8 @@
     "license": "ISC",
     "engines": {
         "node": ">=18"
+    },
+    "publishConfig": {
+        "access": "public"
     }
 }
