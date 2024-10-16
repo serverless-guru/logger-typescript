@@ -6,9 +6,10 @@ const LOG_EVENT = process.env.SG_LOGGER_LOG_EVENT?.toLowerCase() === "true";
 const SKIP_MASK = process.env.SG_LOGGER_MASK?.toLowerCase() === "false";
 const MAX_SIZE = parseInt(process.env.SG_LOGGER_MAX_SIZE || "60000") || 60000;
 const COMPRESS_SIZE = parseInt(process.env.SG_LOGGER_COMPRESS_SIZE || "25000") || 25000;
-const NO_COMPRESS = process.env.SG_LOGGER_NO_COMPRESS?.toLowerCase == "true";
-const NO_SKIP = process.env.SG_LOGGER_NO_SKIP?.toLowerCase == "true";
+const NO_COMPRESS = process.env.SG_LOGGER_NO_COMPRESS?.toLowerCase === "true";
+const NO_SKIP = process.env.SG_LOGGER_NO_SKIP?.toLowerCase === "true";
 const MAX_PAYLOAD_MESSAGE = "Log too large";
+const LOG_TS = process.env.SG_LOGGER_LOG_TS?.toLowerCase === "true";
 
 class Logger {
     static METRIC_UNITS = {
@@ -167,9 +168,16 @@ class Logger {
             return "";
         };
 
+        const getTimestamp = () => {
+            if (LOG_TS) {
+                return new Date().getTime();
+            }
+            return undefined;
+        };
         const payloadToPrint = getPayloadToPrint(payload);
 
         const logEntry = {
+            timestamp: getTimestamp(),
             service: this.serviceName,
             level: level.toUpperCase(),
             correlationId: this.correlationId,

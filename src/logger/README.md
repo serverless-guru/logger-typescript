@@ -17,10 +17,12 @@ Logger is an opinionated logger utility for Javascript with a focus on AWS Lambd
 * SG_LOGGER_NO_SKIP: Don't skip payloads bigger than *SG_LOGGER_MAX_SIZE*, _default: false_
 * SG_LOGGER_COMPRESS_SIZE: Compress (gzip) payload bigger than size (in bytes), _default: 25000_
 * SG_LOGGER_NO_COMPRESS: Don't compress logs bigger than *SG_LOGGER_COMPRESS_SIZE*, _default: false_
+* SG_LOGGER_LOG_TS: Add timestamp (in ms) to the output object (useful when not using Cloudwatch Logs), _default: false_
 
 ## Log schema
 ```json
 {
+  "timestamp": 1729066777619,
   "service": "myService",
   "level": "INFO",
   "correlationId": "092f5cf0-d1c8-4a71-a8a0-3c86aeb1c212",
@@ -45,17 +47,18 @@ Logger is an opinionated logger utility for Javascript with a focus on AWS Lambd
 
 ```json
 {
-    "service": "myService",
-    "level": "ERROR",
-    "correlationId": "3bfd61c4-8934-4ae9-b646-d57144094986",
-    "message": "invalid factor",
-    "context": {
-      "handlerNamespace": "multiply",
-      "factor": 2
-    },
-    "payload": {
-      "key1": "value1"
-    }
+  "timestamp": 1729066777619,
+  "service": "myService",
+  "level": "ERROR",
+  "correlationId": "3bfd61c4-8934-4ae9-b646-d57144094986",
+  "message": "invalid factor",
+  "context": {
+    "handlerNamespace": "multiply",
+    "factor": 2
+  },
+  "payload": {
+    "key1": "value1"
+  }
 }
 ```
 
@@ -72,25 +75,26 @@ logger.error('global error', new RangeError('invalid factor', {
 
 ```json
 {
-    "service": "myService",
-    "level": "ERROR",
-    "correlationId": "3bfd61c4-8934-4ae9-b646-d57144094986",
-    "message": "global error",
-    "context": {
-      "handlerNamespace": "multiply",
-      "factor": 2
-    },
-    "error": {
-        "name": "RangeError",
-        "location": "/path/to/file.js:341",
-        "message": "invalid factor",
-        "stack": "RangeError: invalid factor\n    at main (/path/to/file.js:341:15)\n    at /path/to/file2.js:953:30\n    at new Promise (<anonymous>)\n    at AwsInvokeLocal.invokeLocalNodeJs (/path/to/file3.js:906:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
-        "cause": {
-            "factor": 12,
-            "limit": 10,
-            "reason": "too big"
-        }
-    }
+  "timestamp": 1729066777619,
+  "service": "myService",
+  "level": "ERROR",
+  "correlationId": "3bfd61c4-8934-4ae9-b646-d57144094986",
+  "message": "global error",
+  "context": {
+    "handlerNamespace": "multiply",
+    "factor": 2
+  },
+  "error": {
+      "name": "RangeError",
+      "location": "/path/to/file.js:341",
+      "message": "invalid factor",
+      "stack": "RangeError: invalid factor\n    at main (/path/to/file.js:341:15)\n    at /path/to/file2.js:953:30\n    at new Promise (<anonymous>)\n    at AwsInvokeLocal.invokeLocalNodeJs (/path/to/file3.js:906:12)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)",
+      "cause": {
+          "factor": 12,
+          "limit": 10,
+          "reason": "too big"
+      }
+  }
 }
 ```
 ## Installation
