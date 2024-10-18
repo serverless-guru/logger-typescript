@@ -9,17 +9,13 @@
         "build": "rm -fr lib/ && rm -rf .tsbuildinfo/ && npm run build:cjs && npm run build:esm",
         "build:cjs": "tsc --build tsconfig.cjs.json && echo '{ \"type\": \"commonjs\" }' > lib/cjs/package.json",
         "build:esm": "tsc --build tsconfig.json && echo '{ \"type\": \"module\" }' > lib/esm/package.json",
-        "use:npmReadme": "mv 'README.md' 'git.README.md' && mv 'src/logger/README.md' 'README.md'",
-        "use:gitReadme": "mv 'README.md' 'src/logger/README.md' && mv 'git.README.md' 'README.md'",
-        "prepack": "npm run use:npmReadme",
-        "postpack": "npm run use:gitReadme",
         "test": "echo \"no test specified\" && exit 0"
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/serverless-guru/logger.git"
+        "url": "git+https://github.com/serverless-guru/logger-typescript.git"
     },
-    "homepage": "https://github.com/serverless-guru/logger#readme",
+    "homepage": "https://github.com/serverless-guru/logger-typescript#readme",
     "files": [
         "lib"
     ],
