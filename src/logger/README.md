@@ -1,6 +1,6 @@
 # Logger
 
-Logger is an opinionated logger utility for Javascript with a focus on AWS Lambda. Its aim is to simplify log analysis with [CloudWatchLogs Insight](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html).
+Logger is an opinionated logger utility for Javascript. Its aim is to simplify log analysis with [CloudWatchLogs Insight](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AnalyzingLogData.html).
 
 ## Key features
 * Small footprint
