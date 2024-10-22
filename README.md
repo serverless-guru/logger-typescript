@@ -108,14 +108,14 @@ The `Logger` instance can be re-used across modules, allowing to keep globally d
 
 **helpers/logger.js**
 ```javascript
-const { Logger } = require("logger");
+const { Logger } = require("@serverless-guru/logger");
 const logger = new Logger("myService", "myFirstApplication");
 const metricUnits = Logger.METRIC_UNITS;
 module.exports = { logger, metricUnits };
 ```
 **helpers/math.js**
 ```javascript
-import { logger } from './logger'
+const { logger } = require('./logger')
 
 export const multiply = async (n, factor) => {
   const sleepMs = Math.floor(Math.random() * 1000 * factor)
