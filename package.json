@@ -1,6 +1,6 @@
 {
     "name": "@serverless-guru/logger",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Common logger utility",
     "main": "./lib/cjs/index.js",
     "types": "./lib/cjs/index.d.ts",
