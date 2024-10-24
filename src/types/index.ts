@@ -30,10 +30,11 @@ interface PayloadToPrintResponse {
 
 interface LogEntry {
     timestamp?: number;
+    level: string;
     service: string;
     correlationId: string;
     message: string;
-    context: JSONObject;
+    context?: JSONObject;
     payload?: JSONObject | string | undefined;
     error?: ErrorLogAttributes;
 }

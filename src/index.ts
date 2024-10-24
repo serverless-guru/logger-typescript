@@ -14,7 +14,7 @@ import type {
     ErrorLogAttributes,
 } from "./types";
 
-const LOG_EVENT = process.env.SG_LOGGER_LOG_EVENT?.toLowerCase() === "true";
+const NO_LOG_EVENT = process.env.SG_LOGGER_LOG_EVENT?.toLowerCase() === "false";
 const SKIP_MASK = process.env.SG_LOGGER_MASK?.toLowerCase() === "false";
 const MAX_SIZE = parseInt(process.env.SG_LOGGER_MAX_SIZE || `${MAX_PAYLOAD_SIZE}`) || MAX_PAYLOAD_SIZE;
 const COMPRESS_SIZE =
@@ -47,7 +47,7 @@ class Logger {
         payload: JSONObject | Error = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
-    ) {
+    ): void {
         try {
             // Default sensitive attributes
             const defaultSensitiveAttributes: StringArray = [
@@ -145,7 +145,7 @@ class Logger {
                 };
             };
 
-            const getCodeLocation = (stack?: string) => {
+            const getCodeLocation = (stack?: string): string => {
                 if (!stack) {
                     return "";
                 }
@@ -173,16 +173,21 @@ class Logger {
 
             const payloadToPrint = getPayloadToPrint(payload);
 
+            const contextToLog = {
+                ...this.persistentContext,
+                ...(typeof context === "object" && context !== null && Object.keys(context).length ? context : {}),
+            };
+            if (payloadToPrint.gzip === true) {
+                contextToLog["gzip"] = true;
+            }
+
             const logEntry: LogEntry = {
                 timestamp: getTimestamp(),
+                level: level.toUpperCase(),
                 service: this.serviceName,
                 correlationId: this.correlationId,
                 message,
-                context: {
-                    ...this.persistentContext,
-                    ...(typeof context === "object" && context !== null && Object.keys(context).length ? context : {}),
-                    gzip: payloadToPrint.gzip === true ? true : undefined,
-                },
+                context: isEmptyObject(contextToLog) ? undefined : contextToLog,
                 payload: payloadToPrint.payload,
                 error: payloadToPrint.error,
             };
@@ -212,7 +217,7 @@ class Logger {
         payload: JSONObject = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
-    ) {
+    ): void {
         this.log("info", message, payload, context, sensitiveAttributes);
     }
 
@@ -221,7 +226,7 @@ class Logger {
         payload: JSONObject = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
-    ) {
+    ): void {
         this.log("debug", message, payload, context, sensitiveAttributes);
     }
 
@@ -230,7 +235,7 @@ class Logger {
         payload: JSONObject = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
-    ) {
+    ): void {
         this.log("warn", message, payload, context, sensitiveAttributes);
     }
 
@@ -239,12 +244,12 @@ class Logger {
         payload: JSONObject | Error = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
-    ) {
+    ): void {
         this.log("error", message, payload, context, sensitiveAttributes);
     }
 
     logInputEvent(event: JSONObject): void {
-        if (LOG_EVENT) {
+        if (!NO_LOG_EVENT) {
             this.info("Input Event", event, {});
         }
     }
