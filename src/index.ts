@@ -64,13 +64,8 @@ class Logger {
             const arrayToLowerCase = (array: StringArray): StringArray => {
                 if (Array.isArray(array)) {
                     return array
-                        .map((el) => {
-                            if (typeof el === "string") {
-                                return el.toLowerCase();
-                            }
-                            return undefined;
-                        })
-                        .filter((el) => typeof el !== "undefined");
+                    .filter((el) => typeof el === "string")
+                    .map((el) => el.toLowerCase());
                 }
                 return [];
             };
