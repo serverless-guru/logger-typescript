@@ -9,7 +9,9 @@
         "build": "rm -fr lib/ && rm -rf .tsbuildinfo/ && npm run build:cjs && npm run build:esm",
         "build:cjs": "tsc --build tsconfig.cjs.json && echo '{ \"type\": \"commonjs\" }' > lib/cjs/package.json",
         "build:esm": "tsc --build tsconfig.json && echo '{ \"type\": \"module\" }' > lib/esm/package.json",
-        "test": "echo \"no test specified\" && exit 0"
+        "test:lint": "eslint",
+        "test:unit": "jest --coverage",
+        "test": "npm run test:lint && npm run test:unit"
     },
     "repository": {
         "type": "git",
@@ -40,16 +42,21 @@
         }
     },
     "devDependencies": {
+        "@jest/globals": "29.7.0",
         "@tsconfig/node20": "20.1.4",
+        "@types/jest": "29.5.14",
         "@types/node": "22.7.4",
         "@typescript-eslint/eslint-plugin": "8.8.0",
         "@typescript-eslint/parser": "8.8.0",
         "eslint": "9.11.1",
         "eslint-config-prettier": "9.1.0",
+        "eslint-plugin-jest": "28.8.3",
         "eslint-plugin-jsdoc": "50.3.0",
         "eslint-plugin-n": "17.10.3",
         "eslint-plugin-promise": "7.1.0",
+        "jest": "29.7.0",
         "prettier": "3.3.3",
+        "ts-jest": "29.2.5",
         "typescript": "5.6.2"
     },
     "author": "Serverless Guru",
