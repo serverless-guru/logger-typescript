@@ -28,6 +28,7 @@ class Logger {
 
     private serviceName: string;
     private correlationId: string;
+    private resetCorrelationId: boolean;
     private applicationName: string;
     private persistentContext: JSONObject;
     private console: Console;
@@ -35,6 +36,7 @@ class Logger {
     constructor(serviceName: string, applicationName: string, correlationId: string | null = null) {
         this.serviceName = serviceName;
         this.correlationId = correlationId ? correlationId : randomUUID();
+        this.resetCorrelationId = correlationId ? false : true;
         this.applicationName = applicationName;
         this.persistentContext = {};
         this.console =
@@ -63,9 +65,7 @@ class Logger {
 
             const arrayToLowerCase = (array: StringArray): StringArray => {
                 if (Array.isArray(array)) {
-                    return array
-                    .filter((el) => typeof el === "string")
-                    .map((el) => el.toLowerCase());
+                    return array.filter((el) => typeof el === "string").map((el) => el.toLowerCase());
                 }
                 return [];
             };
@@ -261,6 +261,7 @@ class Logger {
     setCorrelationId(correlationId: string): void {
         if (correlationId) {
             this.correlationId = correlationId;
+            this.resetCorrelationId = true;
         }
     }
 
@@ -275,9 +276,9 @@ class Logger {
 
     clearLogContext(): void {
         this.persistentContext = {};
-        this.correlationId = "";
-        this.applicationName = "";
-        this.serviceName = "";
+        if (this.resetCorrelationId) {
+            this.correlationId = randomUUID();
+        }
     }
 
     metric(activity: string, meta: MetricMeta): void {

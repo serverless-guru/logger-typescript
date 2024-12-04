@@ -115,7 +115,18 @@ describe("Log Outputs", () => {
         logger.clearLogContext();
         logger.info("Simple");
         expect(console.info).toHaveBeenCalledWith(
-            '{"level":"INFO","service":"","correlationId":"","message":"Simple"}'
+            '{"level":"INFO","service":"testService","correlationId":"testId","message":"Simple"}'
+        );
+    });
+
+    test("Global Context Reset", () => {
+        const logger = new Logger("testService", "testApp");
+        logger.clearLogContext();
+        logger.info("Simple");
+        expect(console.info).toHaveBeenCalledWith(
+            expect.stringMatching(
+                /{"level":"INFO","service":"testService","correlationId":"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}","message":"Simple"}/
+            )
         );
     });
 
