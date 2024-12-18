@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { Console } from "node:console";
-import { MetricUnitList, MAX_PAYLOAD_SIZE, COMPRESS_PAYLOAD_SIZE, MAX_PAYLOAD_MESSAGE } from "./constants";
+import { MetricUnitList, MAX_PAYLOAD_SIZE, COMPRESS_PAYLOAD_SIZE, MAX_PAYLOAD_MESSAGE } from "./constants.js";
 
 import type {
     Level,
