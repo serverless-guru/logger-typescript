@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash, createCipheriv } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { Console } from "node:console";
 import { MetricUnitList, MAX_PAYLOAD_SIZE, COMPRESS_PAYLOAD_SIZE, MAX_PAYLOAD_MESSAGE } from "./constants.js";
@@ -32,6 +32,7 @@ class Logger {
     private applicationName: string;
     private persistentContext: JSONObject;
     private console: Console;
+    private cipherKey: Buffer | null = null; // Optional because it will be set later
 
     constructor(serviceName: string, applicationName: string, correlationId: string | null = null) {
         this.serviceName = serviceName;
@@ -74,7 +75,7 @@ class Logger {
             const attributesToMask = new Set([...defaultSensitiveAttributes, ...arrayToLowerCase(sensitiveAttributes)]);
 
             // Mask sensitive attributes, remove null
-            const maskSensitiveAttributes = (key: string, value: JSONObject): JSONObject | string | undefined => {
+            const maskSensitiveAttributes = (key: string, value: any): JSONObject | string | undefined => {
                 if (value === null) {
                     return undefined;
                 }
@@ -85,6 +86,21 @@ class Logger {
                     return value;
                 }
                 if (attributesToMask.has(key.toLowerCase())) {
+                    /**
+                     * For security concern, we will combine the sensitive attributes with encryption flow
+                     * This will help us to investigate the log when debugging
+                     * We can filter out the log with encrypted sensitive data as unique identifier
+                     */
+                    if (!!this.cipherKey) {
+                        const cipher = createCipheriv(
+                            'aes-256-ecb',
+                            this.cipherKey,
+                            null
+                        );            
+                        const encrypted = Buffer.concat([cipher.update(String(value), "utf8"), cipher.final()]);
+                        return encrypted.toString("hex");
+                    }
+
                     return "****";
                 }
                 return value;
@@ -209,7 +225,7 @@ class Logger {
                 default:
                     break;
             }
-        } catch {}
+        } catch { }
     }
 
     info(
@@ -262,6 +278,19 @@ class Logger {
         if (correlationId) {
             this.correlationId = correlationId;
             this.resetCorrelationId = true;
+        }
+    }
+
+    /**
+     * We need to call this earlier in client code before log anything (info, debug, warn, error)
+     * to encrypt the sensitive data and pass true for toBeEncrypted in the last argument of log call
+     * 
+     * @param encryptKey the key string for encryption
+     * NOTE: it must be same for decrypt for debugging later
+     */
+    setEncryptionKey(encryptKey: string): void {
+        if (encryptKey) {
+            this.cipherKey = createHash('sha256').update(String(encryptKey)).digest();
         }
     }
 

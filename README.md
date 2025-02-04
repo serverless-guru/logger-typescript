@@ -141,6 +141,10 @@ const LOG_FORMAT = process.env.AWS_LAMBDA_LOG_FORMAT || 'Text'
 const main = async (event, context) => {
   try {
     logger.setCorrelationId(context.awsRequestId)
+
+    // if we call this, logger will support for encryption by default for defined sensitive attributes
+    logger.setEncryptionKey('my-project-key')    
+
     logger.addContextKey({
       handlerNamespace: 'multiply',
       logFormat: LOG_FORMAT,
@@ -161,7 +165,7 @@ const main = async (event, context) => {
     const result = await Promise.all(promises)
     const end = new Date().getTime()
 
-    
+    // 'factor' value will be encrypted by default when we already set encryption key
     logger.info('Result', { result }, {}, ['factor'])
 
     logger.metric('multiply', {
@@ -220,6 +224,12 @@ Retrieves the current _correlationId_. Useful when the correlationId needs to be
 const correlationId = logger.getCorrelationId()
 ```
 * __correlationId__ [string, mandatory]
+### setEncryptionKey
+Define the crypto key for encryption module.
+```javascript
+logger.setEncryptionKey(encryptKey)
+```
+* __encryptKey__ [string, mandatory]
 ### logInputEvent
 Logs the object passed as argument when the environment variable _LOG\_EVENT_ is set to _"true"_. Generally used to conditionally log the incoming event, but it can be used for any other payload too.
 
