@@ -74,7 +74,7 @@ class Logger {
             const attributesToMask = new Set([...defaultSensitiveAttributes, ...arrayToLowerCase(sensitiveAttributes)]);
 
             // Mask sensitive attributes, remove null
-            const maskSensitiveAttributes = (key: string, value: JSONObject): JSONObject | string | undefined => {
+            const maskSensitiveAttributes = (key: string, value: JSONObject | string): JSONObject | string | undefined => {
                 if (value === null) {
                     return undefined;
                 }
@@ -83,6 +83,9 @@ class Logger {
                 }
                 if (SKIP_MASK === true) {
                     return value;
+                }
+                if (isJSONString(value)) {
+                    return JSON.stringify(JSON.parse(value as string), maskSensitiveAttributes);
                 }
                 if (attributesToMask.has(key.toLowerCase())) {
                     return "****";
@@ -318,6 +321,19 @@ class Logger {
             },
         };
         this.console.log(JSON.stringify(emf));
+    }
+
+    isJSONString(str: unknown): boolean {
+        if (typeof str !== "string") {
+            return false; // Not a string at all
+        }
+        
+        try {
+            const parsed = JSON.parse(str);
+            return typeof parsed === "object" && parsed !== null;
+        } catch (e) {
+            return false; // Parsing failed, so it's not JSON
+        }
     }
 }
 
