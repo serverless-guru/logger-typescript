@@ -61,6 +61,14 @@ describe("Log Outputs", () => {
         );
     });
 
+    test("String Payload", () => {
+        const logger = new Logger("testService", "testApp", "testId");
+        logger.info("Message", "stringPayload");
+        expect(console.info).toHaveBeenCalledWith(
+            '{"level":"INFO","service":"testService","correlationId":"testId","message":"Message","payload":"stringPayload"}'
+        );
+    });
+
     test("Error", () => {
         const logger = new Logger("testService", "testApp", "testId");
         const error = new RangeError("too big", { cause: { i: 10, limit: 1 } });
