@@ -11,6 +11,7 @@ import type {
     MetricMeta,
     LogEntry,
     JSONObject,
+    JSONValue,
     ErrorLogAttributes,
 } from "./types";
 
@@ -46,7 +47,7 @@ class Logger {
     log(
         level: Level,
         message: string = "",
-        payload: JSONObject | Error = {},
+        payload: JSONValue | Error = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
     ): void {
@@ -74,7 +75,7 @@ class Logger {
             const attributesToMask = new Set([...defaultSensitiveAttributes, ...arrayToLowerCase(sensitiveAttributes)]);
 
             // Mask sensitive attributes, remove null
-            const maskSensitiveAttributes = (key: string, value: JSONObject): JSONObject | string | undefined => {
+            const maskSensitiveAttributes = (key: string, value: JSONValue): JSONValue | string | undefined => {
                 if (value === null) {
                     return undefined;
                 }
@@ -90,7 +91,7 @@ class Logger {
                 return value;
             };
 
-            const isEmptyObject = (value: JSONObject): boolean => {
+            const isEmptyObject = (value: JSONValue): boolean => {
                 if (value == null) {
                     return false;
                 }
@@ -104,7 +105,10 @@ class Logger {
                 return isEmpty(value);
             };
 
-            const isEmpty = (obj: JSONObject): boolean => {
+            const isEmpty = (obj: JSONValue): boolean => {
+                if (typeof obj !== "object") {
+                    return false;
+                }
                 for (const prop in obj) {
                     if (Object.hasOwn(obj, prop)) {
                         return false;
@@ -113,7 +117,7 @@ class Logger {
                 return true;
             };
 
-            const getPayloadToPrint = (payload: JSONObject | Error | undefined): PayloadToPrintResponse => {
+            const getPayloadToPrint = (payload: JSONValue | Error | undefined): PayloadToPrintResponse => {
                 try {
                     if (payload instanceof Error) {
                         return { gzip: false, error: formatError(payload) };
@@ -173,7 +177,7 @@ class Logger {
 
             const payloadToPrint = getPayloadToPrint(payload);
 
-            const contextToLog = {
+            const contextToLog: JSONObject = {
                 ...this.persistentContext,
                 ...(typeof context === "object" && context !== null && Object.keys(context).length ? context : {}),
             };
@@ -214,7 +218,7 @@ class Logger {
 
     info(
         message: string = "",
-        payload: JSONObject = {},
+        payload: JSONValue = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
     ): void {
@@ -223,7 +227,7 @@ class Logger {
 
     debug(
         message: string = "",
-        payload: JSONObject = {},
+        payload: JSONValue = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
     ): void {
@@ -232,7 +236,7 @@ class Logger {
 
     warn(
         message: string = "",
-        payload: JSONObject = {},
+        payload: JSONValue = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
     ): void {
@@ -241,7 +245,7 @@ class Logger {
 
     error(
         message: string = "",
-        payload: JSONObject | Error = {},
+        payload: JSONValue | Error = {},
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
     ): void {
