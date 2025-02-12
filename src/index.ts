@@ -85,6 +85,9 @@ class Logger {
                 if (SKIP_MASK === true) {
                     return value;
                 }
+                if (this.isJSONString(value)) {
+                    return JSON.stringify(JSON.parse(value as string), maskSensitiveAttributes);
+                }
                 if (attributesToMask.has(key.toLowerCase())) {
                     return "****";
                 }
@@ -213,7 +216,7 @@ class Logger {
                 default:
                     break;
             }
-        } catch {}
+        } catch { }
     }
 
     info(
@@ -322,6 +325,16 @@ class Logger {
             },
         };
         this.console.log(JSON.stringify(emf));
+    }
+
+    isJSONString(str: unknown): str is string {
+        try {
+            if (typeof str !== "string") return false; // Not a string at all
+            JSON.parse(str);
+            return true;
+        } catch {
+            return false; // Parsing failed, so it's not JSON
+        }
     }
 }
 
