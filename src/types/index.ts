@@ -9,22 +9,14 @@ interface MetricMeta {
     dimensions?: Array<Array<string>>;
     value?: number;
 }
-type JSONValue =
-    | string
-    | number
-    | boolean
-    | null
-    | undefined
-    | JSONValue[]
-    | {
-          [key: string]: JSONValue;
-      };
+type JSONValue = string | number | boolean | null | undefined | JSONValue[] | JSONObject;
+
 interface JSONObject {
     [k: string]: JSONValue;
 }
 interface PayloadToPrintResponse {
     gzip?: boolean;
-    payload?: JSONObject | string | undefined;
+    payload?: JSONValue | string | undefined;
     error?: ErrorLogAttributes;
 }
 
@@ -35,7 +27,7 @@ interface LogEntry {
     correlationId: string;
     message: string;
     context?: JSONObject;
-    payload?: JSONObject | string | undefined;
+    payload?: JSONValue;
     error?: ErrorLogAttributes;
 }
 
@@ -66,5 +58,6 @@ export type {
     LogEntry,
     MetricDefinition,
     JSONObject,
+    JSONValue,
     ErrorLogAttributes,
 };
