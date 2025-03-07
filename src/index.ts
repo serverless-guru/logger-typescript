@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { Console } from "node:console";
 import { MetricUnitList, MAX_PAYLOAD_SIZE, COMPRESS_PAYLOAD_SIZE, MAX_PAYLOAD_MESSAGE } from "./constants.js";
+import env from "env-var";
 
 import type {
     Level,
@@ -15,14 +16,14 @@ import type {
     ErrorLogAttributes,
 } from "./types";
 
-const NO_LOG_EVENT = process.env.SG_LOGGER_LOG_EVENT?.toLowerCase() === "false";
-const SKIP_MASK = process.env.SG_LOGGER_MASK?.toLowerCase() === "false";
-const MAX_SIZE = parseInt(process.env.SG_LOGGER_MAX_SIZE || `${MAX_PAYLOAD_SIZE}`) || MAX_PAYLOAD_SIZE;
-const COMPRESS_SIZE =
-    parseInt(process.env.SG_LOGGER_COMPRESS_SIZE || `${COMPRESS_PAYLOAD_SIZE}`) || COMPRESS_PAYLOAD_SIZE;
-const NO_COMPRESS = process.env.SG_LOGGER_NO_COMPRESS?.toLowerCase() === "true";
-const NO_SKIP = process.env.SG_LOGGER_NO_SKIP?.toLowerCase() === "true";
-const LOG_TS = process.env.SG_LOGGER_LOG_TS?.toLowerCase() === "true";
+const LOG_EVENT = env.get("SG_LOGGER_LOG_EVENT").default("true").asBool();
+const MASK_SECRETS = env.get("SG_LOGGER_MASK").default("true").asBool();
+const MAX_SIZE = env.get("SG_LOGGER_MAX_SIZE").default(MAX_PAYLOAD_SIZE).asInt();
+const COMPRESS_SIZE = env.get("SG_LOGGER_COMPRESS_SIZE").default(COMPRESS_PAYLOAD_SIZE).asInt();
+const NO_COMPRESS = env.get("SG_LOGGER_NO_COMPRESS").default("false").asBool();
+const NO_SKIP = env.get("SG_LOGGER_NO_SKIP").default("false").asBool();
+const LOG_TS = env.get("SG_LOGGER_LOG_TS").default("false").asBool();
+const LOG_LEVEL = env.get("SG_LOGGER_LOG_LEVEL").default("warn").asEnum<Level>(["debug", "error", "info", "warn"]);
 
 class Logger {
     static METRIC_UNITS = MetricUnitList;
@@ -41,7 +42,20 @@ class Logger {
         this.applicationName = applicationName;
         this.persistentContext = {};
         this.console =
-            process.env.AWS_LAMBDA_LOG_FORMAT === "JSON" ? new Console((process.stdout, process.stderr)) : console;
+            env.get("AWS_LAMBDA_LOG_FORMAT").asString() === "JSON"
+                ? new Console((process.stdout, process.stderr))
+                : console;
+    }
+
+    getLogLevel(level: Level): number {
+        const logLevels: Record<Level, number> = {
+            debug: 0,
+            info: 1,
+            warn: 2,
+            error: 3,
+        };
+
+        return logLevels[level] || -1;
     }
 
     log(
@@ -51,6 +65,10 @@ class Logger {
         context: JSONObject = {},
         sensitiveAttributes: StringArray = []
     ): void {
+        if (this.getLogLevel(level) < this.getLogLevel(LOG_LEVEL)) {
+            return;
+        }
+
         try {
             // Default sensitive attributes
             const defaultSensitiveAttributes: StringArray = [
@@ -82,7 +100,7 @@ class Logger {
                 if (typeof value === "object" && isEmptyObject(value)) {
                     return undefined;
                 }
-                if (SKIP_MASK === true) {
+                if (MASK_SECRETS === false) {
                     return value;
                 }
                 if (this.isJSONString(value)) {
@@ -216,7 +234,7 @@ class Logger {
                 default:
                     break;
             }
-        } catch { }
+        } catch {}
     }
 
     info(
@@ -256,7 +274,7 @@ class Logger {
     }
 
     logInputEvent(event: JSONObject): void {
-        if (!NO_LOG_EVENT) {
+        if (LOG_EVENT) {
             this.info("Input Event", event, {});
         }
     }
