@@ -31,7 +31,7 @@ const NO_SKIP = env.get("SG_LOGGER_NO_SKIP").default("false").asBool();
 const LOG_TS = env.get("SG_LOGGER_LOG_TS").default("false").asBool();
 const LOG_LEVEL = env
     .get("SG_LOGGER_LOG_LEVEL")
-    .default(env.get("AWS_LAMBDA_LOG_LEVEL").default("warn").asString())
+    .default(env.get("AWS_LAMBDA_LOG_LEVEL").default("warn").asString().toLowerCase())
     .asEnum<Level>(LOG_LEVELS);
 
 class Logger {
