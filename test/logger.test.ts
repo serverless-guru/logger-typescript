@@ -24,6 +24,7 @@ describe("Log Outputs", () => {
         jest.resetModules();
         process.env = {
             ...originalEnv,
+            SG_LOGGER_LOG_LEVEL: "debug",
         };
 
         console.log = jest.fn();
@@ -41,6 +42,7 @@ describe("Log Outputs", () => {
     });
 
     test("Message only", () => {
+        const { Logger } = require("../src/index");
         const logger = new Logger("testService", "testApp", "testId");
         logger.info("Message");
         logger.debug("Message");
@@ -62,6 +64,7 @@ describe("Log Outputs", () => {
     });
 
     test("String Payload", () => {
+        const { Logger } = require("../src/index");
         const logger = new Logger("testService", "testApp", "testId");
         logger.info("Message", "stringPayload");
         expect(console.info).toHaveBeenCalledWith(
@@ -70,6 +73,7 @@ describe("Log Outputs", () => {
     });
 
     test("Error", () => {
+        const { Logger } = require("../src/index");
         const logger = new Logger("testService", "testApp", "testId");
         const error = new RangeError("too big", { cause: { i: 10, limit: 1 } });
         logger.error("Message", error);
@@ -81,12 +85,14 @@ describe("Log Outputs", () => {
     });
 
     test("Log Input Event", () => {
+        const { Logger } = require("../src/index");
         const logger = new Logger("testService", "testApp", "testId");
         logger.logInputEvent({ jest: "jest" });
         expect(console.info).toHaveBeenCalledWith(expect.stringContaining('"payload":{"jest":"jest"'));
     });
 
     test("Set and Get correlationId", () => {
+        const { Logger } = require("../src/index");
         const logger = new Logger("testService", "testApp");
         const correlationId = logger.getCorrelationId();
         expect(correlationId).toMatch(/\w+/);
@@ -96,6 +102,7 @@ describe("Log Outputs", () => {
     });
 
     test("Masking", () => {
+        const { Logger } = require("../src/index");
         const logger = new Logger("testService", "testApp", "testId");
         logger.info(
             "Simple",
@@ -109,6 +116,7 @@ describe("Log Outputs", () => {
     });
 
     test("Global Context", () => {
+        const { Logger } = require("../src/index");
         const logger = new Logger("testService", "testApp", "testId");
         logger.addContextKey({ handler: "Jest" });
         logger.info("Simple");
@@ -128,6 +136,7 @@ describe("Log Outputs", () => {
     });
 
     test("Global Context Reset", () => {
+        const { Logger } = require("../src/index");
         const logger = new Logger("testService", "testApp");
         logger.clearLogContext();
         logger.info("Simple");
@@ -139,6 +148,7 @@ describe("Log Outputs", () => {
     });
 
     test("Metric", () => {
+        const { Logger } = require("../src/index");
         const logger = new Logger("testService", "testApp", "testId");
         logger.addContextKey({ handler: "Jest" });
         logger.metric("testRun", { name: "" });
@@ -226,5 +236,28 @@ describe("Log Outputs", () => {
         const uncompressedPayload = gunzipSync(Buffer.from(JSON.parse(logMessage).payload, "base64")).toString();
         const uncompressedObject = JSON.parse(uncompressedPayload);
         expect(uncompressedObject).toEqual({ lipsum });
+    });
+
+    test("Log level", () => {
+        process.env.SG_LOGGER_LOG_LEVEL = "warn";
+        const { Logger } = require("../src/index");
+        const logger = new Logger("testService", "testApp", "testId");
+        logger.info("Message");
+        logger.debug("Message");
+        logger.warn("Message");
+        logger.error("Message");
+
+        expect(console.info).not.toHaveBeenCalledWith(
+            '{"level":"INFO","service":"testService","correlationId":"testId","message":"Message"}'
+        );
+        expect(console.debug).not.toHaveBeenCalledWith(
+            '{"level":"DEBUG","service":"testService","correlationId":"testId","message":"Message"}'
+        );
+        expect(console.warn).toHaveBeenCalledWith(
+            '{"level":"WARN","service":"testService","correlationId":"testId","message":"Message"}'
+        );
+        expect(console.error).toHaveBeenCalledWith(
+            '{"level":"ERROR","service":"testService","correlationId":"testId","message":"Message"}'
+        );
     });
 });
