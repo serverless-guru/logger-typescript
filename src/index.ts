@@ -1,7 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { Console } from "node:console";
-import { MetricUnitList, MAX_PAYLOAD_SIZE, COMPRESS_PAYLOAD_SIZE, MAX_PAYLOAD_MESSAGE } from "./constants.js";
+import {
+    MetricUnitList,
+    MAX_PAYLOAD_SIZE,
+    COMPRESS_PAYLOAD_SIZE,
+    MAX_PAYLOAD_MESSAGE,
+    LOG_LEVELS,
+} from "./constants.js";
 import env from "env-var";
 
 import type {
@@ -23,7 +29,10 @@ const COMPRESS_SIZE = env.get("SG_LOGGER_COMPRESS_SIZE").default(COMPRESS_PAYLOA
 const NO_COMPRESS = env.get("SG_LOGGER_NO_COMPRESS").default("false").asBool();
 const NO_SKIP = env.get("SG_LOGGER_NO_SKIP").default("false").asBool();
 const LOG_TS = env.get("SG_LOGGER_LOG_TS").default("false").asBool();
-const LOG_LEVEL = env.get("SG_LOGGER_LOG_LEVEL").default("warn").asEnum<Level>(["debug", "info", "warn", "error"]);
+const LOG_LEVEL = env
+    .get("SG_LOGGER_LOG_LEVEL")
+    .default(env.get("AWS_LAMBDA_LOG_LEVEL").default("warn"))
+    .asEnum<Level>(LOG_LEVELS);
 
 class Logger {
     static METRIC_UNITS = MetricUnitList;
