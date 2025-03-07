@@ -333,9 +333,7 @@ When `SG_LOGGER_LOG_LEVEL` is set, only log levels equal or greater than the spe
 
 `debug` < `info` < `warn` < `error`
 
-> Note
->
-> When use with AWS Lambda, and when `AWS_LAMBDA_LOG_LEVEL` is set to a stricter level than `SG_LOGGER_LOG_LEVEL`, ALC will drop logs emitted by the logger that don't match `AWS_LAMBDA_LOG_LEVEL`.
+**Note**: When use with AWS Lambda, and when `AWS_LAMBDA_LOG_LEVEL` is set to a stricter level than `SG_LOGGER_LOG_LEVEL`, ALC will drop logs emitted by the logger that don't match `AWS_LAMBDA_LOG_LEVEL`.
 
 ### metric
 
