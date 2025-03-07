@@ -28,8 +28,9 @@ enum MetricUnitList {
     NoUnit = "None",
 }
 
+const LOG_LEVELS = ["debug", "info", "warn", "error"] as const;
 const MAX_PAYLOAD_SIZE = 60000;
 const COMPRESS_PAYLOAD_SIZE = 25000;
 const MAX_PAYLOAD_MESSAGE = "Log too large";
 
-export { MetricUnitList, MAX_PAYLOAD_SIZE, COMPRESS_PAYLOAD_SIZE, MAX_PAYLOAD_MESSAGE };
+export { MetricUnitList, MAX_PAYLOAD_SIZE, COMPRESS_PAYLOAD_SIZE, MAX_PAYLOAD_MESSAGE, LOG_LEVELS };

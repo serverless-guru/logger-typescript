@@ -1,6 +1,6 @@
-import type { MetricUnitList } from "../constants.js";
+import type { LOG_LEVELS, MetricUnitList } from "../constants.js";
 
-type Level = "info" | "debug" | "warn" | "error";
+type Level = (typeof LOG_LEVELS)[number];
 type StringArray = Array<string>;
 type MetricUnit = (typeof MetricUnitList)[keyof typeof MetricUnitList];
 interface MetricMeta {
