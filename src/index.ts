@@ -64,7 +64,7 @@ class Logger {
             error: 3,
         };
 
-        return logLevels[level] || -1;
+        return logLevels[level] ?? -1;
     }
 
     log(
