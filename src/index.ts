@@ -398,12 +398,6 @@ class Logger {
             return false; // Parsing failed, so it's not JSON
         }
     }
-
-    resetSensitiveAttributes(): void {
-        this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES];
-        // Clear any custom sensitive attributes that were added through log methods
-        this.log("info", "Sensitive attributes have been reset to defaults", {}, {}, []);
-    }
 }
 
 export { Logger };
