@@ -20,13 +20,9 @@ import type {
     JSONObject,
     JSONValue,
     ErrorLogAttributes,
+    LoggerOptions,
+    SensitiveAttrOptions,
 } from "./types";
-
-interface LoggerOptions {
-    correlationId?: string | null;
-    additionalSensitiveAttributes?: StringArray;
-    overrideSensitiveAttributes?: StringArray;
-}
 
 const LOG_EVENT = env.get("SG_LOGGER_LOG_EVENT").default("true").asBool();
 const MASK_SECRETS = env.get("SG_LOGGER_MASK").default("true").asBool();
@@ -108,7 +104,7 @@ class Logger {
         message: string = "",
         payload: JSONValue | Error = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray | LoggerOptions = []
+        sensitiveAttributes: StringArray | SensitiveAttrOptions = []
     ): void {
         if (this.getLogLevel(level) < this.getLogLevel(LOG_LEVEL)) {
             return;
@@ -285,7 +281,7 @@ class Logger {
         message: string = "",
         payload: JSONValue = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray | LoggerOptions = []
+        sensitiveAttributes: StringArray | SensitiveAttrOptions = []
     ): void {
         this.log("info", message, payload, context, sensitiveAttributes);
     }
@@ -294,7 +290,7 @@ class Logger {
         message: string = "",
         payload: JSONValue = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray | LoggerOptions = []
+        sensitiveAttributes: StringArray | SensitiveAttrOptions = []
     ): void {
         this.log("debug", message, payload, context, sensitiveAttributes);
     }
@@ -303,7 +299,7 @@ class Logger {
         message: string = "",
         payload: JSONValue = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray | LoggerOptions = []
+        sensitiveAttributes: StringArray | SensitiveAttrOptions = []
     ): void {
         this.log("warn", message, payload, context, sensitiveAttributes);
     }
@@ -312,7 +308,7 @@ class Logger {
         message: string = "",
         payload: JSONValue | Error = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray | LoggerOptions = []
+        sensitiveAttributes: StringArray | SensitiveAttrOptions = []
     ): void {
         this.log("error", message, payload, context, sensitiveAttributes);
     }
