@@ -73,13 +73,10 @@ class Logger {
                 : console;
 
         // Initialize default sensitive attributes
-        this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES];
-
-        // Handle custom sensitive attributes
         if (options.overrideSensitiveAttributes) {
             this.defaultSensitiveAttributes = options.overrideSensitiveAttributes;
         } else if (options.additionalSensitiveAttributes) {
-            this.defaultSensitiveAttributes = [...this.defaultSensitiveAttributes, ...options.additionalSensitiveAttributes];
+            this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES, ...options.additionalSensitiveAttributes];
         }
     }
 
