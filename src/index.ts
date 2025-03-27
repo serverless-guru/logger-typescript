@@ -21,7 +21,7 @@ import type {
     JSONValue,
     ErrorLogAttributes,
     LoggerOptions,
-    SensitiveAttrOptions,
+    LogOptions,
 } from "./types";
 
 const LOG_EVENT = env.get("SG_LOGGER_LOG_EVENT").default("true").asBool();
@@ -104,7 +104,7 @@ class Logger {
         message: string = "",
         payload: JSONValue | Error = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray | SensitiveAttrOptions = []
+        options: StringArray | LogOptions = []
     ): void {
         if (this.getLogLevel(level) < this.getLogLevel(LOG_LEVEL)) {
             return;
@@ -118,18 +118,23 @@ class Logger {
                 return [];
             };
 
-            // Handle sensitive attributes based on input type
-            let attributesToMask: Set<string>;
-            if (Array.isArray(sensitiveAttributes)) {
-                attributesToMask = new Set([...this.defaultSensitiveAttributes, ...arrayToLowerCase(sensitiveAttributes)]);
+            // Normalize input options
+            let inputOptions: LogOptions;
+            if (Array.isArray(options)) {
+                inputOptions = { additionalSensitiveAttributes: options };
             } else {
-                if (sensitiveAttributes.overrideSensitiveAttributes) {
-                    attributesToMask = new Set(arrayToLowerCase(sensitiveAttributes.overrideSensitiveAttributes));
-                } else if (sensitiveAttributes.additionalSensitiveAttributes) {
-                    attributesToMask = new Set([...this.defaultSensitiveAttributes, ...arrayToLowerCase(sensitiveAttributes.additionalSensitiveAttributes)]);
-                } else {
-                    attributesToMask = new Set(this.defaultSensitiveAttributes);
-                }
+                inputOptions = options;
+            }
+
+            // Handle sensitive attributes
+            let attributesToMask: Set<string>;
+            if (inputOptions.overrideSensitiveAttributes) {
+                attributesToMask = new Set(arrayToLowerCase(inputOptions.overrideSensitiveAttributes));
+            } else {
+                attributesToMask = new Set([
+                    ...this.defaultSensitiveAttributes,
+                    ...arrayToLowerCase(inputOptions.additionalSensitiveAttributes || [])
+                ]);
             }
 
             // Mask sensitive attributes, remove null
@@ -281,7 +286,7 @@ class Logger {
         message: string = "",
         payload: JSONValue = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray | SensitiveAttrOptions = []
+        sensitiveAttributes: StringArray | LogOptions = []
     ): void {
         this.log("info", message, payload, context, sensitiveAttributes);
     }
@@ -290,7 +295,7 @@ class Logger {
         message: string = "",
         payload: JSONValue = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray | SensitiveAttrOptions = []
+        sensitiveAttributes: StringArray | LogOptions = []
     ): void {
         this.log("debug", message, payload, context, sensitiveAttributes);
     }
@@ -299,7 +304,7 @@ class Logger {
         message: string = "",
         payload: JSONValue = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray | SensitiveAttrOptions = []
+        sensitiveAttributes: StringArray | LogOptions = []
     ): void {
         this.log("warn", message, payload, context, sensitiveAttributes);
     }
@@ -308,7 +313,7 @@ class Logger {
         message: string = "",
         payload: JSONValue | Error = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray | SensitiveAttrOptions = []
+        sensitiveAttributes: StringArray | LogOptions = []
     ): void {
         this.log("error", message, payload, context, sensitiveAttributes);
     }

@@ -49,12 +49,12 @@ type MetricDefinition = {
     Unit: MetricUnit;
 };
 
-interface SensitiveAttrOptions {
+interface LogOptions {
     additionalSensitiveAttributes?: StringArray;
     overrideSensitiveAttributes?: StringArray;
 }
 
-interface LoggerOptions extends SensitiveAttrOptions {
+interface LoggerOptions extends LogOptions {
     correlationId?: string | null;
 }
 
@@ -69,6 +69,6 @@ export type {
     JSONObject,
     JSONValue,
     ErrorLogAttributes,
-    SensitiveAttrOptions,
+    LogOptions,
     LoggerOptions,
 };
