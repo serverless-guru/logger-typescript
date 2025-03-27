@@ -66,25 +66,25 @@ class Logger {
                 ? new Console((process.stdout, process.stderr))
                 : console;
 
-        // Handle both old and new parameter styles
+        // Normalize input options
+        let inputOptions: LoggerOptions;
         if (typeof options === 'string' || options === null) {
-            // Old style: correlationId parameter
-            this.correlationId = options ? options : randomUUID();
-            this.resetCorrelationId = options ? false : true;
-            this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES];
+            inputOptions = { correlationId: options };
         } else {
-            // New style: LoggerOptions object
-            this.correlationId = options.correlationId ? options.correlationId : randomUUID();
-            this.resetCorrelationId = options.correlationId ? false : true;
+            inputOptions = options;
+        }
 
-            // Initialize default sensitive attributes
-            if (options.overrideSensitiveAttributes) {
-                this.defaultSensitiveAttributes = options.overrideSensitiveAttributes;
-            } else if (options.additionalSensitiveAttributes) {
-                this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES, ...options.additionalSensitiveAttributes];
-            } else {
-                this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES];
-            }
+        // Set correlation ID
+        this.correlationId = inputOptions.correlationId ? inputOptions.correlationId : randomUUID();
+        this.resetCorrelationId = inputOptions.correlationId ? false : true;
+
+        // Initialize default sensitive attributes
+        if (inputOptions.overrideSensitiveAttributes) {
+            this.defaultSensitiveAttributes = inputOptions.overrideSensitiveAttributes;
+        } else if (inputOptions.additionalSensitiveAttributes) {
+            this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES, ...inputOptions.additionalSensitiveAttributes];
+        } else {
+            this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES];
         }
     }
 
