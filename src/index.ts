@@ -22,6 +22,12 @@ import type {
     ErrorLogAttributes,
 } from "./types";
 
+interface LoggerOptions {
+    correlationId?: string | null;
+    additionalSensitiveAttributes?: StringArray;
+    overrideSensitiveAttributes?: StringArray;
+}
+
 const LOG_EVENT = env.get("SG_LOGGER_LOG_EVENT").default("true").asBool();
 const MASK_SECRETS = env.get("SG_LOGGER_MASK").default("true").asBool();
 const MAX_SIZE = env.get("SG_LOGGER_MAX_SIZE").default(MAX_PAYLOAD_SIZE).asInt();
@@ -36,6 +42,16 @@ const LOG_LEVEL = env
 
 class Logger {
     static METRIC_UNITS = MetricUnitList;
+    private static readonly DEFAULT_SENSITIVE_ATTRIBUTES: StringArray = [
+        "password",
+        "userid",
+        "token",
+        "secret",
+        "key",
+        "x-api-key",
+        "bearer",
+        "authorization",
+    ];
 
     private serviceName: string;
     private correlationId: string;
@@ -43,17 +59,28 @@ class Logger {
     private applicationName: string;
     private persistentContext: JSONObject;
     private console: Console;
+    private defaultSensitiveAttributes: StringArray;
 
-    constructor(serviceName: string, applicationName: string, correlationId: string | null = null) {
+    constructor(serviceName: string, applicationName: string, options: LoggerOptions = {}) {
         this.serviceName = serviceName;
-        this.correlationId = correlationId ? correlationId : randomUUID();
-        this.resetCorrelationId = correlationId ? false : true;
+        this.correlationId = options.correlationId ? options.correlationId : randomUUID();
+        this.resetCorrelationId = options.correlationId ? false : true;
         this.applicationName = applicationName;
         this.persistentContext = {};
         this.console =
             env.get("AWS_LAMBDA_LOG_FORMAT").asString() === "JSON"
                 ? new Console((process.stdout, process.stderr))
                 : console;
+
+        // Initialize default sensitive attributes
+        this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES];
+
+        // Handle custom sensitive attributes
+        if (options.overrideSensitiveAttributes) {
+            this.defaultSensitiveAttributes = options.overrideSensitiveAttributes;
+        } else if (options.additionalSensitiveAttributes) {
+            this.defaultSensitiveAttributes = [...this.defaultSensitiveAttributes, ...options.additionalSensitiveAttributes];
+        }
     }
 
     getLogLevel(level: Level): number {
@@ -79,18 +106,6 @@ class Logger {
         }
 
         try {
-            // Default sensitive attributes
-            const defaultSensitiveAttributes: StringArray = [
-                "password",
-                "userid",
-                "token",
-                "secret",
-                "key",
-                "x-api-key",
-                "bearer",
-                "authorization",
-            ];
-
             const arrayToLowerCase = (array: StringArray): StringArray => {
                 if (Array.isArray(array)) {
                     return array.filter((el) => typeof el === "string").map((el) => el.toLowerCase());
@@ -99,7 +114,7 @@ class Logger {
             };
 
             // Merge default sensitive attributes with custom ones
-            const attributesToMask = new Set([...defaultSensitiveAttributes, ...arrayToLowerCase(sensitiveAttributes)]);
+            const attributesToMask = new Set([...this.defaultSensitiveAttributes, ...arrayToLowerCase(sensitiveAttributes)]);
 
             // Mask sensitive attributes, remove null
             const maskSensitiveAttributes = (key: string, value: JSONValue): JSONValue | string | undefined => {
@@ -243,7 +258,7 @@ class Logger {
                 default:
                     break;
             }
-        } catch {}
+        } catch { }
     }
 
     info(
@@ -362,6 +377,12 @@ class Logger {
         } catch {
             return false; // Parsing failed, so it's not JSON
         }
+    }
+
+    resetSensitiveAttributes(): void {
+        this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES];
+        // Clear any custom sensitive attributes that were added through log methods
+        this.log("info", "Sensitive attributes have been reset to defaults", {}, {}, []);
     }
 }
 
