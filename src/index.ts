@@ -132,7 +132,7 @@ class Logger {
                 attributesToMask = new Set(arrayToLowerCase(inputOptions.overrideSensitiveAttributes));
             } else {
                 attributesToMask = new Set([
-                    ...this.defaultSensitiveAttributes,
+                    ...arrayToLowerCase(this.defaultSensitiveAttributes),
                     ...arrayToLowerCase(inputOptions.additionalSensitiveAttributes || [])
                 ]);
             }
