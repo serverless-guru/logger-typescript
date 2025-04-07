@@ -230,10 +230,23 @@ const logger = new Logger(serviceName, applicationName, options);
 
 - **serviceName** [string, mandatory]: Added to each log output
 - **applicationName** [string, mandatory]: Defines the Namespace for metrics
-- **options** [object | string | null, optional]: Configuration options
+- **options** [object | null, optional]: Configuration options
   - **correlationId** [string, optional]: A new UUIDv4 is generated when not defined. Added to each log output.
   - **additionalSensitiveAttributes** [string[], optional]: Add new sensitive attributes to the pre-defined defaults
   - **overrideSensitiveAttributes** [string[], optional]: Completely override the default sensitive attributes
+
+For backward compatibility, you can also pass a string as the third parameter which will be treated as the correlationId (this usage is deprecated):
+
+```javascript
+// New style with options object
+const logger = new Logger("myService", "myApp", {
+    correlationId: "custom-id",
+    additionalSensitiveAttributes: ["customSecret"]
+});
+
+// Old style with string correlationId (deprecated)
+const logger = new Logger("myService", "myApp", "custom-id");
+```
 
 ### setCorrelationId
 

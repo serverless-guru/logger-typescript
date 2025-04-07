@@ -106,6 +106,14 @@ class Logger {
         context: JSONObject = {},
         options: StringArray | LogOptions = []
     ): void {
+        // Normalize input options
+        let inputOptions: LogOptions;
+        if (Array.isArray(options)) {
+            inputOptions = { additionalSensitiveAttributes: options };
+        } else {
+            inputOptions = options;
+        }
+
         if (this.getLogLevel(level) < this.getLogLevel(LOG_LEVEL)) {
             return;
         }
@@ -117,14 +125,6 @@ class Logger {
                 }
                 return [];
             };
-
-            // Normalize input options
-            let inputOptions: LogOptions;
-            if (Array.isArray(options)) {
-                inputOptions = { additionalSensitiveAttributes: options };
-            } else {
-                inputOptions = options;
-            }
 
             // Handle sensitive attributes
             let attributesToMask: Set<string>;
