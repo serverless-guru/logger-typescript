@@ -20,6 +20,8 @@ import type {
     JSONObject,
     JSONValue,
     ErrorLogAttributes,
+    LoggerOptions,
+    LogOptions,
 } from "./types";
 
 const LOG_EVENT = env.get("SG_LOGGER_LOG_EVENT").default("true").asBool();
@@ -36,6 +38,16 @@ const LOG_LEVEL = env
 
 class Logger {
     static METRIC_UNITS = MetricUnitList;
+    private static readonly DEFAULT_SENSITIVE_ATTRIBUTES: StringArray = [
+        "password",
+        "userid",
+        "token",
+        "secret",
+        "key",
+        "x-api-key",
+        "bearer",
+        "authorization",
+    ];
 
     private serviceName: string;
     private correlationId: string;
@@ -43,17 +55,37 @@ class Logger {
     private applicationName: string;
     private persistentContext: JSONObject;
     private console: Console;
+    private defaultSensitiveAttributes: StringArray;
 
-    constructor(serviceName: string, applicationName: string, correlationId: string | null = null) {
+    constructor(serviceName: string, applicationName: string, options: LoggerOptions | string | null = {}) {
         this.serviceName = serviceName;
-        this.correlationId = correlationId ? correlationId : randomUUID();
-        this.resetCorrelationId = correlationId ? false : true;
         this.applicationName = applicationName;
         this.persistentContext = {};
         this.console =
             env.get("AWS_LAMBDA_LOG_FORMAT").asString() === "JSON"
                 ? new Console((process.stdout, process.stderr))
                 : console;
+
+        // Normalize input options
+        let inputOptions: LoggerOptions;
+        if (typeof options === 'string' || options === null) {
+            inputOptions = { correlationId: options };
+        } else {
+            inputOptions = options;
+        }
+
+        // Set correlation ID
+        this.correlationId = inputOptions.correlationId ? inputOptions.correlationId : randomUUID();
+        this.resetCorrelationId = inputOptions.correlationId ? false : true;
+
+        // Initialize default sensitive attributes
+        if (inputOptions.overrideSensitiveAttributes) {
+            this.defaultSensitiveAttributes = inputOptions.overrideSensitiveAttributes;
+        } else if (inputOptions.additionalSensitiveAttributes) {
+            this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES, ...inputOptions.additionalSensitiveAttributes];
+        } else {
+            this.defaultSensitiveAttributes = [...Logger.DEFAULT_SENSITIVE_ATTRIBUTES];
+        }
     }
 
     getLogLevel(level: Level): number {
@@ -72,25 +104,21 @@ class Logger {
         message: string = "",
         payload: JSONValue | Error = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray = []
+        options: StringArray | LogOptions = []
     ): void {
+        // Normalize input options
+        let inputOptions: LogOptions;
+        if (Array.isArray(options)) {
+            inputOptions = { additionalSensitiveAttributes: options };
+        } else {
+            inputOptions = options;
+        }
+
         if (this.getLogLevel(level) < this.getLogLevel(LOG_LEVEL)) {
             return;
         }
 
         try {
-            // Default sensitive attributes
-            const defaultSensitiveAttributes: StringArray = [
-                "password",
-                "userid",
-                "token",
-                "secret",
-                "key",
-                "x-api-key",
-                "bearer",
-                "authorization",
-            ];
-
             const arrayToLowerCase = (array: StringArray): StringArray => {
                 if (Array.isArray(array)) {
                     return array.filter((el) => typeof el === "string").map((el) => el.toLowerCase());
@@ -98,8 +126,16 @@ class Logger {
                 return [];
             };
 
-            // Merge default sensitive attributes with custom ones
-            const attributesToMask = new Set([...defaultSensitiveAttributes, ...arrayToLowerCase(sensitiveAttributes)]);
+            // Handle sensitive attributes
+            let attributesToMask: Set<string>;
+            if (inputOptions.overrideSensitiveAttributes) {
+                attributesToMask = new Set(arrayToLowerCase(inputOptions.overrideSensitiveAttributes));
+            } else {
+                attributesToMask = new Set([
+                    ...arrayToLowerCase(this.defaultSensitiveAttributes),
+                    ...arrayToLowerCase(inputOptions.additionalSensitiveAttributes || [])
+                ]);
+            }
 
             // Mask sensitive attributes, remove null
             const maskSensitiveAttributes = (key: string, value: JSONValue): JSONValue | string | undefined => {
@@ -243,14 +279,14 @@ class Logger {
                 default:
                     break;
             }
-        } catch {}
+        } catch { }
     }
 
     info(
         message: string = "",
         payload: JSONValue = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray = []
+        sensitiveAttributes: StringArray | LogOptions = []
     ): void {
         this.log("info", message, payload, context, sensitiveAttributes);
     }
@@ -259,7 +295,7 @@ class Logger {
         message: string = "",
         payload: JSONValue = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray = []
+        sensitiveAttributes: StringArray | LogOptions = []
     ): void {
         this.log("debug", message, payload, context, sensitiveAttributes);
     }
@@ -268,7 +304,7 @@ class Logger {
         message: string = "",
         payload: JSONValue = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray = []
+        sensitiveAttributes: StringArray | LogOptions = []
     ): void {
         this.log("warn", message, payload, context, sensitiveAttributes);
     }
@@ -277,7 +313,7 @@ class Logger {
         message: string = "",
         payload: JSONValue | Error = {},
         context: JSONObject = {},
-        sensitiveAttributes: StringArray = []
+        sensitiveAttributes: StringArray | LogOptions = []
     ): void {
         this.log("error", message, payload, context, sensitiveAttributes);
     }

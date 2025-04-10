@@ -225,12 +225,28 @@ To get the logs of all events for the specific `correlationId` across multiple s
 ### Constructor
 
 ```javascript
-const logger = new Logger(serviceName, applicationName, correlationId);
+const logger = new Logger(serviceName, applicationName, options);
 ```
 
 - **serviceName** [string, mandatory]: Added to each log output
 - **applicationName** [string, mandatory]: Defines the Namespace for metrics
-- **correlationId** [string, optional]: A new UUIDv4 is generated when not defined. Added to each log output.
+- **options** [object | null, optional]: Configuration options
+  - **correlationId** [string, optional]: A new UUIDv4 is generated when not defined. Added to each log output.
+  - **additionalSensitiveAttributes** [string[], optional]: Add new sensitive attributes to the pre-defined defaults
+  - **overrideSensitiveAttributes** [string[], optional]: Completely override the default sensitive attributes
+
+For backward compatibility, you can also pass a string as the third parameter which will be treated as the correlationId (this usage is deprecated):
+
+```javascript
+// New style with options object
+const logger = new Logger("myService", "myApp", {
+    correlationId: "custom-id",
+    additionalSensitiveAttributes: ["customSecret"]
+});
+
+// Old style with string correlationId (deprecated)
+const logger = new Logger("myService", "myApp", "custom-id");
+```
 
 ### setCorrelationId
 
@@ -414,3 +430,47 @@ functions:
             applicationLogLevel: WARN
             systemLogLevel: INFO
 ```
+
+### Sensitive Attributes
+
+The logger automatically masks sensitive values in your logs. By default, it masks common sensitive fields like passwords, tokens, and API keys. You can customize this behavior in two ways:
+
+1. **Add to Defaults**: Use `additionalSensitiveAttributes` to add new fields to the default list:
+```javascript
+const logger = new Logger("myService", "myApp", {
+    additionalSensitiveAttributes: ["customSecret", "apiToken"]
+});
+```
+
+2. **Override Defaults**: Use `overrideSensitiveAttributes` to completely replace the default list:
+```javascript
+const logger = new Logger("myService", "myApp", {
+    overrideSensitiveAttributes: ["onlyThese", "willBeMasked"]
+});
+```
+
+You can also specify sensitive attributes per log call:
+```javascript
+// Add to defaults
+logger.info("message", payload, context, ["customSecret"]);
+
+// Or use the object syntax
+logger.info("message", payload, context, {
+    additionalSensitiveAttributes: ["customSecret"]
+});
+
+// Or override completely
+logger.info("message", payload, context, {
+    overrideSensitiveAttributes: ["onlyThese", "willBeMasked"]
+});
+```
+
+The default sensitive attributes are:
+- password
+- userid
+- token
+- secret
+- key
+- x-api-key
+- bearer
+- authorization

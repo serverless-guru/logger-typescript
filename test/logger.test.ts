@@ -260,4 +260,76 @@ describe("Log Outputs", () => {
             '{"level":"ERROR","service":"testService","correlationId":"testId","message":"Message"}'
         );
     });
+
+    test("Additional Sensitive Attributes in Constructor", () => {
+        const { Logger } = require("../src/index");
+        const logger = new Logger("testService", "testApp", {
+            correlationId: "testId",
+            additionalSensitiveAttributes: ["newSecret", "newKey"]
+        });
+        logger.info("Message", { newSecret: "secret", newKey: "key", password: "pass" });
+        expect(console.info).toHaveBeenCalledWith(
+            '{"level":"INFO","service":"testService","correlationId":"testId","message":"Message","payload":{"newSecret":"****","newKey":"****","password":"****"}}'
+        );
+    });
+
+    test("Override Sensitive Attributes in Constructor", () => {
+        const { Logger } = require("../src/index");
+        const logger = new Logger("testService", "testApp", {
+            overrideSensitiveAttributes: ["onlyThis", "willBeMasked"]
+        });
+        logger.info("Message", { onlyThis: "secret", willBeMasked: "key", password: "pass" });
+        expect(console.info).toHaveBeenCalledWith(
+            expect.stringMatching(
+                /{"level":"INFO","service":"testService","correlationId":"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}","message":"Message","payload":{"onlyThis":"\*\*\*\*","willBeMasked":"\*\*\*\*","password":"pass"}}/
+            )
+        );
+    });
+
+    test("Additional Sensitive Attributes in Log Call", () => {
+        const { Logger } = require("../src/index");
+        const logger = new Logger("testService", "testApp");
+        logger.info("Message", { customSecret: "secret", password: "pass" }, {}, {
+            additionalSensitiveAttributes: ["customSecret"]
+        });
+        expect(console.info).toHaveBeenCalledWith(
+            expect.stringMatching(
+                /{"level":"INFO","service":"testService","correlationId":"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}","message":"Message","payload":{"customSecret":"\*\*\*\*","password":"\*\*\*\*"}}/
+            )
+        );
+    });
+
+    test("Override Sensitive Attributes in Log Call", () => {
+        const { Logger } = require("../src/index");
+        const logger = new Logger("testService", "testApp");
+        logger.info("Message", { customSecret: "secret", password: "pass" }, {}, {
+            overrideSensitiveAttributes: ["customSecret"]
+        });
+        expect(console.info).toHaveBeenCalledWith(
+            expect.stringContaining('{"level":"INFO","service":"testService","correlationId":"')
+        );
+        expect(console.info).toHaveBeenCalledWith(
+            expect.stringContaining('","message":"Message","payload":{"customSecret":"****","password":"pass"}}')
+        );
+    });
+
+    test("Backward Compatibility with String Array in Log Call", () => {
+        const { Logger } = require("../src/index");
+        const logger = new Logger("testService", "testApp");
+        logger.info("Message", { customSecret: "secret", password: "pass" }, {}, ["customSecret"]);
+        expect(console.info).toHaveBeenCalledWith(
+            expect.stringMatching(
+                /{"level":"INFO","service":"testService","correlationId":"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}","message":"Message","payload":{"customSecret":"\*\*\*\*","password":"\*\*\*\*"}}/
+            )
+        );
+    });
+
+    test("Backward Compatibility with String in Constructor", () => {
+        const { Logger } = require("../src/index");
+        const logger = new Logger("testService", "testApp", "testId");
+        logger.info("Message", { password: "pass" });
+        expect(console.info).toHaveBeenCalledWith(
+            '{"level":"INFO","service":"testService","correlationId":"testId","message":"Message","payload":{"password":"****"}}'
+        );
+    });
 });
